@@ -176,12 +176,33 @@ html, body {
 /* 중앙: 현상에 맞는 움직이는 이미지 */
 .hero-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2; }
 
-/* 우하단 고정: 염소자리 별자리 + 흐릿한 염소 🐐 */
-.hero-corner { position: absolute; right: 8px; bottom: 6px; width: 100px; height: 78px; z-index: 1; }
-.hero-corner .goat { position: absolute; right: 4px; bottom: 0; font-size: 2.7rem; opacity: .2; filter: grayscale(.4); }
-.hero-corner .hero-const { position: absolute; right: 0; bottom: 0; width: 100px; height: 78px; opacity: .7; }
-.hero-const line { stroke: rgba(160,190,255,.8); stroke-width: 1; }
+/* 좌상단: 달 뒷면(크레이터) */
+.moon-corner { position: absolute; top: 8px; left: 8px; z-index: 1; }
+.moonface {
+  position: relative; width: 46px; height: 46px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 36%, #e8eaf0, #aeb3c4 70%, #8b90a6);
+  box-shadow: 0 0 14px #cfd6ff55;
+}
+.moonface i { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: #00000026; }
+.moonface i.sm { width: 6px; height: 6px; }
+
+/* 우상단(D-day 아래): 염소자리 */
+.const-tr { position: absolute; top: 44px; right: 6px; width: 92px; height: 62px; z-index: 1; opacity: .75; }
+.const-tr .hero-const { width: 92px; height: 62px; }
+.hero-const line { stroke: rgba(160,190,255,.85); stroke-width: 1.1; }
 .hero-const circle { fill: #dbe6ff; }
+
+/* 하단을 걷는 염소 🐐 */
+.goat-walker { position: absolute; bottom: 4px; left: 4%; z-index: 2; animation: goatWalk 13s ease-in-out infinite; }
+.goat-walker .goat { display: inline-block; font-size: 1.9rem; animation: goatBob .5s ease-in-out infinite; }
+@keyframes goatWalk {
+  0%   { left: 4%;  transform: scaleX(1); }
+  44%  { left: 76%; transform: scaleX(1); }
+  50%  { left: 78%; transform: scaleX(-1); }
+  94%  { left: 4%;  transform: scaleX(-1); }
+  100% { left: 4%;  transform: scaleX(1); }
+}
+@keyframes goatBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
 /* 별똥별 소나기 (유성우) */
 .c-meteors { position: absolute; inset: 0; }
@@ -227,8 +248,10 @@ html, body {
 @keyframes hTwinkle { 0%,100% { transform: scale(1) rotate(0); opacity: .85; } 50% { transform: scale(1.18) rotate(18deg); opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .h-meteor, .h-moon, .h-planet, .h-planet .h-orbit, .h-twinkle { animation: none; }
+  .h-meteor, .h-moon, .h-planet, .h-planet .h-orbit, .h-twinkle,
+  .goat-walker, .goat-walker .goat { animation: none; }
   .h-meteor { opacity: .75; }
+  .goat-walker { left: 10%; }
 }
 
 /* ---------- 미션 ---------- */
@@ -395,6 +418,7 @@ html, body {
   font-size: .62rem; font-weight: 800; color: #06122b; background: var(--accent2);
   border-radius: 999px; min-width: 16px; height: 16px; line-height: 16px; padding: 0 3px;
 }
+.cal-cell .cal-fav { position: absolute; top: 2px; left: 4px; font-size: .62rem; color: var(--accent); line-height: 1; }
 .cal-cell.today { box-shadow: inset 0 0 0 2px var(--accent); }
 .cal-cell.sel { background: var(--card2); border-color: var(--accent); }
 

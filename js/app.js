@@ -251,16 +251,18 @@
     return `<div class="h-twinkle">✦</div>`;
   }
 
-  // 움직이는 이미지 무대 (중앙=현상 애니메이션, 우하단=염소자리+염소, D-day)
+  // 좌상단 달 뒷면(크레이터) 그림
+  const MOONFACE = `<div class="moonface"><i style="top:9px;left:12px"></i><i style="top:21px;left:25px"></i><i class="sm" style="top:29px;left:10px"></i><i class="sm" style="top:11px;left:29px"></i></div>`;
+
+  // 무대: 좌상단=달뒷면, 중앙=현상 애니메이션, 우상단(D-day 아래)=염소자리, 하단=걷는 염소🐐
   function heroStage(ev, ddayPill, todayClass) {
     const kind = heroKind(ev);
     return `
       <div class="hero-stage kind-${kind}">
+        <div class="moon-corner">${MOONFACE}</div>
         <div class="hero-center">${heroCenter(kind)}</div>
-        <div class="hero-corner">
-          <span class="goat" aria-hidden="true">🐐</span>
-          ${constellationSVG()}
-        </div>
+        <div class="const-tr">${constellationSVG()}</div>
+        <span class="goat-walker"><span class="goat" aria-hidden="true">🐐</span></span>
         <span class="hero-dday ${todayClass}">${ddayPill}</span>
       </div>`;
   }
@@ -390,10 +392,12 @@
       const has = byDay[ds]?.length;
       const isToday = ds === TODAY;
       const isSel = ds === ui.cal.date;
+      const fav = has && byDay[ds].some(e => Favorites.isFav(e));   // 관심 등록된 현상이 있는 날
       cells += `
         <button class="cal-cell ${has ? "has" : ""} ${isToday ? "today" : ""} ${isSel ? "sel" : ""}"
                 data-action="cal-day" data-date="${ds}" ${has ? "" : "disabled"}>
           <span class="cal-d">${d}</span>
+          ${fav ? `<span class="cal-fav">★</span>` : ""}
           ${has ? `<span class="cal-dot">${has}</span>` : ""}
         </button>`;
     }
