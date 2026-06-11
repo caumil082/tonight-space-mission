@@ -292,6 +292,20 @@ html, body {
 .fb-no { background: #fb718522; }
 .fb-explain { color: var(--muted); font-size: .9rem; }
 
+/* ---------- 접이식 이벤트 카드 ---------- */
+.card-head { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+.ev-kind { font-size: 1.3rem; flex: none; line-height: 1; }
+.card-head .ev-name { font-size: 1rem; font-weight: 700; flex: 1; min-width: 0; line-height: 1.3; }
+.ev-head-right { flex: none; display: flex; align-items: center; gap: 8px; }
+.diff-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+.diff-dot.diff-easy   { background: var(--green); }
+.diff-dot.diff-medium { background: var(--yellow); }
+.diff-dot.diff-hard   { background: var(--red); }
+.ev-caret { color: var(--muted); font-size: .8rem; transition: transform .15s; }
+.ev-card.open .ev-caret { transform: rotate(180deg); }
+.ev-card .card-detail { display: none; }
+.ev-card.open .card-detail { display: block; margin-top: 10px; }
+
 /* ---------- 관심(별) 버튼 ---------- */
 .card-top-right { display: flex; align-items: center; gap: 8px; }
 .star {

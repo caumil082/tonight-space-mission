@@ -153,22 +153,33 @@
       : `<span class="rec rec-good">⭐ 추천</span>`;
   }
 
+  // 현상 종류별 아이콘 (접힌 카드에서 한눈에)
+  const KIND_ICON = { meteor: "☄️", moon: "🌕", eclipse: "🌑", planet: "🪐", star: "✨" };
+
+  // 접이식 카드: 평소엔 한 줄(아이콘·이름·난이도점·D-day·☆), 누르면 자세히
   function eventCard(ev) {
     const g = AstroData.explain(ev.event + " " + (ev.remarks || ""));
     const timeStr = ev.time ? ` · ${ev.time}` : "";
+    const d = AstroData.difficulty(ev);
+    const icon = KIND_ICON[heroKind(ev)] || "✨";
     return `
-      <div class="card">
-        <div class="card-top">
+      <div class="card ev-card">
+        <div class="card-head" data-action="card-toggle">
+          <span class="ev-kind">${icon}</span>
           <span class="ev-name">${esc(ev.event)}</span>
-          <span class="card-top-right">
+          <span class="ev-head-right">
+            <span class="diff-dot diff-${d}" title="관측 난이도"></span>
             <span class="dday">${ddayText(ev.date)}</span>
             ${starBtn(ev)}
+            <span class="ev-caret">▾</span>
           </span>
         </div>
-        <div class="card-sub">${AstroData.pretty(ev.date)}${esc(timeStr)}</div>
-        <div class="card-row">${recBadge(ev)} ${diffBadge(ev)}</div>
-        ${ev.remarks ? `<div class="remarks">${esc(ev.remarks)}</div>` : ""}
-        ${g ? `<div class="explain">💡 <b>${esc(g.term)}</b> — ${esc(g.easy)}</div>` : ""}
+        <div class="card-detail">
+          <div class="card-sub">${AstroData.pretty(ev.date)}${esc(timeStr)}</div>
+          <div class="card-row">${recBadge(ev)} ${diffBadge(ev)}</div>
+          ${ev.remarks ? `<div class="remarks">${esc(ev.remarks)}</div>` : ""}
+          ${g ? `<div class="explain">💡 <b>${esc(g.term)}</b> — ${esc(g.easy)}</div>` : ""}
+        </div>
       </div>`;
   }
 
@@ -771,6 +782,7 @@
         renderCalendar();
         break;
       }
+      case "card-toggle": { const c = t.closest(".ev-card"); if (c) c.classList.toggle("open"); break; }
       case "backup-export": Backup.download(); break;
       case "goto-mission": switchTab("mission"); break;
       case "quiz-start":  startQuiz(); break;
