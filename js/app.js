@@ -640,20 +640,36 @@
   function renderQuiz() {
     if (!quizState) {
       const s = Quiz.load();
+      const remain = Quiz.remainingToday();
       $("#view").innerHTML = `
         <div class="quiz-intro">
           <div class="quiz-emoji">📝</div>
           <h2>오늘의 천문 퀴즈</h2>
           <p>오늘과 이번 달 천문현상으로 만든 <b>3문제</b>를 풀어봐요.</p>
-          ${s.plays ? `<p class="hint">최고 점수: <b>${s.best} / 3</b> · 지금까지 ${s.plays}번 도전</p>` : ""}
-          <button class="btn-big" data-action="quiz-start">퀴즈 시작 🚀</button>
+          ${s.correct >= 100 ? `<p class="quiz-congrats">🎉 100개 달성! 정말 잘했어요!</p>` : ""}
+          ${remain > 0
+            ? `<button class="btn-big" data-action="quiz-start">퀴즈 시작 🚀</button>
+               <p class="hint">오늘 ${Quiz.playsToday()} / ${Quiz.DAILY_LIMIT}회 · ${remain}번 더 풀 수 있어요</p>`
+            : `<p class="quiz-locked">오늘 퀴즈를 다 풀었어요! 🌙<br>내일 또 도전해요.</p>`}
+          ${quizTotal(s)}
         </div>`;
       return;
     }
     renderQuestion();
   }
 
+  // 하단 누적 표시: 성공 횟수(맞춘 문제) / 목표 100
+  function quizTotal(s) {
+    const pct = Math.min(100, Math.round((s.correct || 0) / 100 * 100));
+    return `
+      <div class="quiz-total">
+        <div class="quiz-total-row">✅ 성공 횟수: <b>${s.correct || 0}건</b> <span class="muted">/ 목표 100</span></div>
+        <div class="xpbar"><span style="width:${pct}%"></span></div>
+      </div>`;
+  }
+
   function startQuiz() {
+    if (!Quiz.canPlay()) { renderQuiz(); return; }   // 하루 한도 초과 시 시작 막기
     quizState = { questions: Quiz.build(TODAY), current: 0, score: 0, answered: false };
     renderQuestion();
   }
@@ -703,15 +719,21 @@
     if (st.current + 1 < st.questions.length) {
       st.current++; st.answered = false; renderQuestion();
     } else {
-      Quiz.recordResult(st.score, st.questions.length);
+      const s = Quiz.recordResult(st.score, st.questions.length);
       const msg = st.score === 3 ? "완벽해요! 🌟" : st.score === 2 ? "잘했어요! 👍"
                 : st.score === 1 ? "좋은 시작이에요 🙂" : "다음엔 더 잘할 수 있어요 💪";
+      const just100 = s.correct >= 100 && s.correct - st.score < 100;
       $("#view").innerHTML = `
         <div class="quiz-intro">
           <div class="quiz-emoji">🎯</div>
           <h2>${st.score} / ${st.questions.length} 점</h2>
           <p>${msg}</p>
-          <button class="btn-big" data-action="quiz-start">다시 풀기 🔄</button>
+          ${just100 ? `<p class="quiz-congrats">🎉 맞춘 문제 100개 달성! 정말 잘했어요!</p>` : ""}
+          ${Quiz.canPlay()
+            ? `<button class="btn-big" data-action="quiz-start">다시 풀기 🔄</button>
+               <p class="hint">오늘 ${Quiz.playsToday()} / ${Quiz.DAILY_LIMIT}회</p>`
+            : `<p class="quiz-locked">오늘은 여기까지! 내일 또 만나요 🌙</p>`}
+          ${quizTotal(s)}
         </div>`;
       quizState = null;
     }

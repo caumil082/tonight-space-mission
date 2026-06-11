@@ -107,21 +107,36 @@ const Quiz = (() => {
     return questions.slice(0, 3);
   }
 
-  /* ---------- 점수 저장 ---------- */
+  /* ---------- 점수/기록 저장 ---------- */
+  const DAILY_LIMIT = 10;                 // 하루 최대 풀이 횟수
+  const DEFAULTS = { correct: 0, best: 0, plays: 0, day: "", playsToday: 0 };
+
   function load() {
-    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { best: 0, plays: 0 }; }
-    catch { return { best: 0, plays: 0 }; }
+    try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem(STORE_KEY)) || {}); }
+    catch { return Object.assign({}, DEFAULTS); }
   }
+  function save(s) { localStorage.setItem(STORE_KEY, JSON.stringify(s)); }
+
+  // 오늘 푼 횟수 / 남은 횟수
+  function playsToday() {
+    const s = load();
+    return s.day === AstroData.today() ? (s.playsToday || 0) : 0;
+  }
+  function remainingToday() { return Math.max(0, DAILY_LIMIT - playsToday()); }
+  function canPlay() { return remainingToday() > 0; }
+
   function recordResult(score, total) {
     const s = load();
+    const today = AstroData.today();
+    if (s.day !== today) { s.day = today; s.playsToday = 0; }  // 날짜 바뀌면 리셋
+    s.playsToday += 1;
     s.plays += 1;
-    s.best = Math.max(s.best, score);
-    s.lastScore = score;
-    s.lastTotal = total;
-    s.at = AstroData.today();
-    localStorage.setItem(STORE_KEY, JSON.stringify(s));
+    s.correct = (s.correct || 0) + score;     // 맞춘 문제 누적 (성공 횟수)
+    s.best = Math.max(s.best || 0, score);
+    s.at = today;
+    save(s);
     return s;
   }
 
-  return { build, load, recordResult };
+  return { build, load, recordResult, DAILY_LIMIT, playsToday, remainingToday, canPlay };
 })();

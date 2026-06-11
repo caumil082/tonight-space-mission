@@ -330,6 +330,13 @@ html, body {
 /* ---------- 퀴즈 ---------- */
 .quiz-intro { text-align: center; padding: 30px 16px; }
 .quiz-emoji { font-size: 3rem; }
+.quiz-congrats { color: var(--accent); font-weight: 800; margin: 8px 0; }
+.quiz-locked { color: var(--muted); font-weight: 700; line-height: 1.6; margin: 16px 0; }
+.quiz-total { max-width: 320px; margin: 22px auto 0; }
+.quiz-total-row { font-size: .95rem; }
+.quiz-total-row b { color: var(--accent); font-size: 1.1rem; }
+.quiz-total .muted { color: var(--muted); font-size: .82rem; }
+.quiz-total .xpbar { margin-top: 8px; }
 .quiz-intro h2 { margin: 10px 0; }
 .quiz-intro p { color: var(--muted); line-height: 1.6; }
 .btn-big {
