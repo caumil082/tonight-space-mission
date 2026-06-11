@@ -186,8 +186,8 @@
   function constellationSVG() {
     const Sky = window.Sky;
     if (!Sky) return "";
-    const list = Sky.CONSTS[Sky.season()] || [];
-    const c = list[0];
+    // 중심 별자리: 고정(FEATURED=염소자리) 우선, 없으면 계절 별자리
+    const c = Sky.FEATURED || (Sky.CONSTS[Sky.season()] || [])[0];
     if (!c) return "";
     const P = c.stars;
     const lines = c.lines.map(([i, j]) =>

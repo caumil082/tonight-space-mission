@@ -32,6 +32,13 @@
     ]
   };
 
+  // 중심(히어로)에 고정으로 보여줄 별자리 — 염소자리(Capricornus)
+  const FEATURED = {
+    name: "염소자리",
+    stars: [[0.14,0.32],[0.40,0.24],[0.66,0.28],[0.88,0.42],[0.66,0.68],[0.40,0.82],[0.20,0.58]],
+    lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0]]
+  };
+
   function season() {
     let m = 6;
     try { m = Number(AstroData.today().slice(5, 7)); } catch {}
@@ -42,7 +49,7 @@
   }
 
   // 별자리 데이터를 카드(app.js)에서도 쓸 수 있게 공개
-  window.Sky = { season, CONSTS };
+  window.Sky = { season, CONSTS, FEATURED };
 
   function start() {
     const canvas = document.createElement("canvas");
