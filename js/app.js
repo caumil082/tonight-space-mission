@@ -238,7 +238,8 @@
   // 중앙의 "현상에 맞는 움직이는 이미지"
   function heroCenter(kind) {
     if (kind === "meteor") {
-      const mets = [{ t: 8, l: -8, d: 0 }, { t: 40, l: -22, d: .5 }, { t: -8, l: 12, d: 1 }, { t: 58, l: 2, d: 1.5 }, { t: 24, l: -34, d: 2 }];
+      // 중앙을 가로질러 우하단(염소자리 쪽)으로 떨어지도록 위쪽에 넓게 배치
+      const mets = [{ t: -14, l: 4, d: 0 }, { t: 4, l: 24, d: .5 }, { t: -20, l: 42, d: 1 }, { t: 16, l: 14, d: 1.5 }, { t: -4, l: 34, d: 2 }];
       return `<div class="c-meteors">${mets.map(m =>
         `<span class="h-meteor" style="top:${m.t}px;left:${m.l}%;animation-delay:${m.d}s"></span>`).join("")}</div>`;
     }
@@ -251,18 +252,18 @@
     return `<div class="h-twinkle">✦</div>`;
   }
 
-  // 좌상단 큰 달(1/4만 보임) — 크레이터는 보이는 우하단 사분면에 배치
-  const MOONFACE = `<div class="moonface"><i style="top:80px;left:86px"></i><i style="top:100px;left:106px"></i><i class="sm" style="top:74px;left:110px"></i><i class="sm" style="top:106px;left:80px"></i></div>`;
+  // 좌상단 아주 큰 달(1/4 파이조각) — 크레이터는 보이는 영역에 배치
+  const MOONFACE = `<div class="moonface"><i style="top:100px;left:135px"></i><i style="top:140px;left:160px"></i><i class="sm" style="top:165px;left:130px"></i><i class="sm" style="top:75px;left:150px"></i></div>`;
 
-  // 무대: 은하수+배경 별자리(연하게), 좌상단 큰 달(1/4), 중앙 현상 애니메이션, 하단 걷는 염소🐐
+  // 무대: 은하수, 좌상단 큰 달(1/4), 중앙→우하단 유성우, 우하단 염소자리(윗부분만), 걷는 염소🐐
   function heroStage(ev, ddayPill, todayClass) {
     const kind = heroKind(ev);
     return `
       <div class="hero-stage kind-${kind}">
         <div class="hero-milkyway"></div>
-        <div class="const-bg">${constellationSVG()}</div>
         <div class="moon-corner">${MOONFACE}</div>
         <div class="hero-center">${heroCenter(kind)}</div>
+        <div class="const-br">${constellationSVG()}</div>
         <span class="goat-walker"><span class="goat" aria-hidden="true">🐐</span></span>
         <span class="hero-dday ${todayClass}">${ddayPill}</span>
       </div>`;

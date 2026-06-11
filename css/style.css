@@ -179,25 +179,25 @@ html, body {
 /* 가운데를 가로지르는 은하수 (연하게) */
 .hero-milkyway {
   position: absolute; inset: -25%; z-index: 0; pointer-events: none;
-  background: linear-gradient(115deg, transparent 40%, rgba(180,200,255,.14) 47%, rgba(225,228,255,.22) 50%, rgba(180,200,255,.14) 53%, transparent 60%);
+  background: linear-gradient(118deg, transparent 38%, rgba(180,200,255,.14) 46%, rgba(225,228,255,.22) 50%, rgba(180,200,255,.14) 54%, transparent 62%);
   filter: blur(7px);
 }
 
-/* 배경 별자리(염소자리) — 크고 연하게 */
-.const-bg { position: absolute; inset: 0; z-index: 0; display: flex; align-items: center; justify-content: center; opacity: .3; }
-.const-bg .hero-const { width: 80%; height: 88%; }
-.hero-const line { stroke: rgba(170,195,255,.9); stroke-width: 1.1; }
-.hero-const circle { fill: #e3ecff; }
-
-/* 좌상단: 큰 달 (원의 1/4만 보이게) */
-.moon-corner { position: absolute; top: -66px; left: -66px; z-index: 1; }
+/* 좌상단: 아주 큰 달 — 원의 1/4 파이조각만 보이게 */
+.moon-corner { position: absolute; top: -55px; left: -115px; z-index: 1; }
 .moonface {
-  position: relative; width: 132px; height: 132px; border-radius: 50%;
-  background: radial-gradient(circle at 62% 62%, #eef0f6, #b4b9c9 68%, #8b90a6);
-  box-shadow: 0 0 26px #cfd6ff44;
+  position: relative; width: 210px; height: 210px; border-radius: 50%;
+  background: radial-gradient(circle at 62% 55%, #f2f3f8, #b4b9c9 66%, #868ba2);
+  box-shadow: 0 0 30px #cfd6ff55;
 }
-.moonface i { position: absolute; width: 13px; height: 13px; border-radius: 50%; background: #0000002b; }
-.moonface i.sm { width: 9px; height: 9px; }
+.moonface i { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #0000002e; }
+.moonface i.sm { width: 11px; height: 11px; }
+
+/* 우하단: 염소자리 — 윗부분만 보이게 (대부분 모서리 밖) */
+.const-br { position: absolute; right: -26px; bottom: -42px; width: 172px; height: 120px; z-index: 1; opacity: .55; }
+.const-br .hero-const { width: 172px; height: 120px; }
+.hero-const line { stroke: rgba(170,195,255,.9); stroke-width: 1.2; }
+.hero-const circle { fill: #e3ecff; }
 
 /* 하단을 걷는 염소 🐐 */
 .goat-walker { position: absolute; bottom: 4px; left: 4%; z-index: 2; animation: goatWalk 13s ease-in-out infinite; }
@@ -221,8 +221,8 @@ html, body {
 }
 @keyframes hMeteor {
   0% { transform: translate(0,0) rotate(33deg); opacity: 0; }
-  10% { opacity: 1; } 60% { opacity: 1; }
-  100% { transform: translate(210px,140px) rotate(33deg); opacity: 0; }
+  10% { opacity: 1; } 65% { opacity: 1; }
+  100% { transform: translate(300px,195px) rotate(33deg); opacity: 0; }
 }
 
 /* 달 / 식 (크레이터 + 발광) */
