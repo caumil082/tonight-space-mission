@@ -41,6 +41,9 @@
     return "winter";
   }
 
+  // 별자리 데이터를 카드(app.js)에서도 쓸 수 있게 공개
+  window.Sky = { season, CONSTS };
+
   function start() {
     const canvas = document.createElement("canvas");
     canvas.id = "skyCanvas";

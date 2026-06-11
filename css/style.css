@@ -164,6 +164,64 @@ html, body {
 .hero-row { margin-top: 12px; display: flex; align-items: center; gap: 8px; }
 .hero-cta { width: 100%; margin-top: 16px; }
 
+/* 🎬 히어로 "움직이는 이미지" 무대 */
+.hero-stage {
+  position: relative; height: 140px; margin: 6px 0 12px;
+  border-radius: 14px; overflow: hidden;
+  background: radial-gradient(120% 130% at 50% 0%, #26408a 0%, #18204a 55%, #11163a 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+.hero-stage .hero-dday { position: absolute; top: 10px; right: 10px; }
+.hero-name { font-size: 1.5rem; font-weight: 800; margin-top: 2px; line-height: 1.25; text-align: center; }
+
+/* 계절 별자리 (카드 안에서 흐름) */
+.hero-const { width: 160px; height: 108px; opacity: .65; animation: constDrift 16s ease-in-out infinite; }
+.hero-const line { stroke: rgba(150,180,255,.75); stroke-width: .9; }
+.hero-const circle { fill: #d7e4ff; }
+.hero-const-name { fill: var(--accent); font-size: 7px; font-weight: 600; }
+@keyframes constDrift { 0%,100% { transform: translate(-9px,0); } 50% { transform: translate(9px,5px); } }
+
+/* 별똥별 (유성우) */
+.h-meteor {
+  position: absolute; top: -14px; left: -12%; width: 70px; height: 2px;
+  background: linear-gradient(90deg, transparent, #ffffff); border-radius: 2px;
+  opacity: 0; transform: rotate(33deg); animation: hMeteor 2.6s linear infinite;
+}
+.h-meteor.d2 { top: 28px; animation-delay: 1s; }
+.h-meteor.d3 { top: -2px; animation-delay: 1.8s; }
+@keyframes hMeteor {
+  0% { transform: translate(0,0) rotate(33deg); opacity: 0; }
+  12% { opacity: 1; } 65% { opacity: 1; }
+  100% { transform: translate(200px,135px) rotate(33deg); opacity: 0; }
+}
+
+/* 달 / 식 */
+.h-moon {
+  position: absolute; width: 58px; height: 58px; border-radius: 50%;
+  background: radial-gradient(circle at 36% 34%, #fff6d8, #d9c27a 70%, #b9a25f);
+  box-shadow: 0 0 26px #ffe9a8aa; animation: hFloat 4s ease-in-out infinite;
+}
+.h-eclipse { background: radial-gradient(circle at 60% 42%, #d24b3a, #7a241a 75%); box-shadow: 0 0 26px #d24b3a88; }
+@keyframes hFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+
+/* 행성 + 도는 위성 */
+.h-planet {
+  position: absolute; width: 50px; height: 50px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 33%, #ffd9a0, #c8742e 75%);
+  box-shadow: 0 0 20px #ffb86b66; animation: hFloat 5s ease-in-out infinite;
+}
+.h-planet .h-orbit { position: absolute; inset: -12px; animation: hSpin 6s linear infinite; }
+.h-planet .h-orbit::before {
+  content: ""; position: absolute; top: 50%; left: -5px; width: 9px; height: 9px;
+  border-radius: 50%; background: #cfe0ff; box-shadow: 0 0 8px #cfe0ff;
+}
+@keyframes hSpin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-const, .h-meteor, .h-moon, .h-planet, .h-planet .h-orbit { animation: none; }
+  .h-meteor { opacity: .7; }
+}
+
 /* ---------- 미션 ---------- */
 .score-banner {
   display: flex; align-items: center; gap: 14px;

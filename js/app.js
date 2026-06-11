@@ -172,7 +172,50 @@
       </div>`;
   }
 
-  // 🌟 대표 이벤트 히어로 카드 (다가오는 90일 안 최고 점수 현상)
+  // 현상 종류 → 히어로 "움직이는 이미지" 테마
+  function heroKind(ev) {
+    const t = (ev.event || "") + " " + (ev.remarks || "");
+    if (/유성우/.test(t)) return "meteor";
+    if (/일식/.test(t)) return "eclipse";
+    if (/월식|망|보름|상현|하현|반달|근지점|원지점/.test(t)) return "moon";
+    if (/행성|수성|금성|화성|목성|토성|천왕성|해왕성|충|근접|접근|이각|합/.test(t)) return "planet";
+    return "star";
+  }
+
+  // 계절 별자리를 SVG로 (히어로 카드 안에서 천천히 흐름)
+  function constellationSVG() {
+    const Sky = window.Sky;
+    if (!Sky) return "";
+    const list = Sky.CONSTS[Sky.season()] || [];
+    const c = list[0];
+    if (!c) return "";
+    const P = c.stars;
+    const lines = c.lines.map(([i, j]) =>
+      `<line x1="${(P[i][0]*100).toFixed(1)}" y1="${(P[i][1]*100).toFixed(1)}" x2="${(P[j][0]*100).toFixed(1)}" y2="${(P[j][1]*100).toFixed(1)}"/>`).join("");
+    const dots = P.map(([x, y]) => `<circle cx="${(x*100).toFixed(1)}" cy="${(y*100).toFixed(1)}" r="1.8"/>`).join("");
+    return `<svg class="hero-const" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      ${lines}${dots}
+      <text x="${(P[0][0]*100).toFixed(1)}" y="${(P[0][1]*100-3).toFixed(1)}" class="hero-const-name">${esc(c.name)}</text>
+    </svg>`;
+  }
+
+  // 움직이는 이미지 무대 (계절 별자리 + 현상별 애니메이션 + D-day)
+  function heroStage(ev, ddayPill, todayClass) {
+    const kind = heroKind(ev);
+    let overlay = "";
+    if (kind === "meteor") overlay = `<span class="h-meteor"></span><span class="h-meteor d2"></span><span class="h-meteor d3"></span>`;
+    else if (kind === "moon") overlay = `<div class="h-moon"></div>`;
+    else if (kind === "eclipse") overlay = `<div class="h-moon h-eclipse"></div>`;
+    else if (kind === "planet") overlay = `<div class="h-planet"><span class="h-orbit"></span></div>`;
+    return `
+      <div class="hero-stage kind-${kind}">
+        ${constellationSVG()}
+        ${overlay}
+        <span class="hero-dday ${todayClass}">${ddayPill}</span>
+      </div>`;
+  }
+
+  // 🌟 대표 이벤트 히어로 카드 — 움직이는 이미지 중심, 글자 최소
   function heroCard() {
     const h = Recommend.hero(TODAY, 90);
     if (!h) return "";
@@ -180,30 +223,14 @@
     const p = Recommend.present(ev);
     const thisMonth = AstroData.ymOf(ev.date) === AstroData.ymOf(TODAY);
     const label = thisMonth ? "이달의 대표 이벤트" : "곧 있을 대표 이벤트";
-
     const dleft = AstroData.daysBetween(TODAY, ev.date);
-    const ddayPill = dleft === 0 ? "오늘 밤!" : `D-${dleft}`;
-    // 카운트다운 한마디 (기대감)
-    const countdown = dleft === 0 ? "바로 오늘이에요!"
-      : dleft <= 7  ? `이번 주, ${dleft}일 뒤예요`
-      : dleft <= 35 ? `${dleft}일 뒤예요`
-      :               `약 ${Math.round(dleft / 7)}주 뒤예요`;
-    // 정식 명칭은 친근한 제목과 다를 때만 작게 표기
-    const showOrigin = p.headline !== ev.event;
+    const ddayPill = `📅 ${dleft === 0 ? "오늘 밤!" : `D-${dleft}`}`;
 
     return `
       <div class="hero">
         <div class="hero-label">🌟 ${label}</div>
-        <div class="hero-top">
-          <span class="hero-icon">${p.icon}</span>
-          <span class="hero-dday ${dleft === 0 ? "is-today" : ""}">${ddayPill}</span>
-        </div>
+        ${heroStage(ev, ddayPill, dleft === 0 ? "is-today" : "")}
         <div class="hero-name">${esc(p.headline)}</div>
-        ${showOrigin ? `<div class="hero-origin">${esc(ev.event)}</div>` : ""}
-        <div class="hero-hook">${esc(p.hook)}</div>
-        <div class="hero-meta">📅 ${AstroData.pretty(ev.date)}${ev.time ? " · " + esc(ev.time) : ""} · ${countdown}</div>
-        <div class="hero-tip">💡 ${esc(p.tip)}</div>
-        <div class="hero-row">${diffBadge(ev)} ${starBtn(ev)}</div>
         <button class="btn-big sm hero-cta" data-action="goto-mission">이 현상으로 미션 하러 가기 🚀</button>
       </div>`;
   }
