@@ -1,0 +1,11 @@
+# OS가 만드는 파일
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 에디터 설정
+.vscode/
+.idea/
+
+# 사용자가 내보낸 백업 파일 (개인 관측 기록·사진이 들어있어 공유 금지)
+tonight-backup-*.json
