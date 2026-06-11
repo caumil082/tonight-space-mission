@@ -238,6 +238,15 @@ html, body {
 .lvl-main { flex: 1; min-width: 0; }
 .lvl-title { font-weight: 800; font-size: 1.05rem; }
 .streak-inline { font-size: .78rem; font-weight: 700; color: #ff9a5a; margin-left: 4px; }
+
+/* 은하 마스터(Lv.8) 형광그린 은하 아이콘 */
+.galaxy-icon {
+  width: 1.15em; height: 1.15em; vertical-align: -0.2em;
+  filter: drop-shadow(0 0 4px #39ff14) drop-shadow(0 0 10px #39ff14aa);
+  animation: galaxySpin 7s linear infinite;
+}
+@keyframes galaxySpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .galaxy-icon { animation: none; } }
 .xpbar { height: 9px; background: #ffffff1f; border-radius: 999px; overflow: hidden; margin: 7px 0 5px; }
 .xpbar span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 999px; transition: width .6s ease; }
 .xp-text { color: var(--muted); font-size: .8rem; }

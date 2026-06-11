@@ -21,6 +21,17 @@
     return ["success", "partial", "fail"].includes(r) ? r : "success";
   }
 
+  // 은하 마스터(Lv.8) 전용 형광그린 은하 아이콘 (이모지 대신 커스텀 SVG)
+  const GALAXY_SVG = `<svg class="galaxy-icon" viewBox="0 0 32 32" aria-label="은하">
+    <g fill="none" stroke="#39ff14" stroke-width="2.6" stroke-linecap="round">
+      <path d="M16 5 C 25 7, 27 18, 16 20.5"/>
+      <path d="M16 27 C 7 25, 5 14, 16 11.5"/>
+    </g>
+    <circle cx="16" cy="16" r="3.3" fill="#c6ffce"/>
+  </svg>`;
+  // 레벨 아이콘: Lv.8은 형광그린 은하 SVG, 그 외는 이모지
+  function levelIcon(L) { return L.lv >= 8 ? GALAXY_SVG : L.emoji; }
+
   // 업로드한 사진을 작게 줄여서 data URL로 변환 (localStorage 용량 절약)
   function resizeImage(file, maxSize = 900, quality = 0.7) {
     return new Promise((resolve, reject) => {
@@ -72,7 +83,7 @@
     const xp = Journal.totalPoints();
     const L = Journal.level(xp);
     const st = Journal.streakGet().count;
-    $("#badge").textContent = `${L.emoji} Lv.${L.lv}`;
+    $("#badge").innerHTML = `${levelIcon(L)} Lv.${L.lv}`;
     $("#points").textContent = `${xp} XP`;
     const sc = $("#streak");
     if (st > 0) { sc.hidden = false; sc.textContent = `🔥 ${st}일`; } else { sc.hidden = true; }
@@ -84,7 +95,7 @@
     const xp = Journal.totalPoints();
     const L = Journal.level(xp);
     const st = Journal.streakGet().count;
-    $("#badge").textContent = `${L.emoji} Lv.${L.lv}`;
+    $("#badge").innerHTML = `${levelIcon(L)} Lv.${L.lv}`;
     const sc = $("#streak");
     if (st > 0) { sc.hidden = false; sc.textContent = `🔥 ${st}일`; }
     countUp(chip, Math.max(0, xp - gained), xp, 700);
@@ -271,7 +282,7 @@
     const pct = Math.round(L.progress * 100);
     return `
       <div class="score-banner">
-        <div class="lvl-badge"><span class="lvl-emoji">${L.emoji}</span><span class="lvl-num">Lv.${L.lv}</span></div>
+        <div class="lvl-badge"><span class="lvl-emoji">${levelIcon(L)}</span><span class="lvl-num">Lv.${L.lv}</span></div>
         <div class="lvl-main">
           <div class="lvl-title">${L.title}${st > 0 ? ` <span class="streak-inline">🔥 ${st}일 연속</span>` : ""}</div>
           <div class="xpbar"><span style="width:${pct}%"></span></div>
