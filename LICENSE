@@ -19,9 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-Note: The astronomical event data bundled in data/events.js is provided by the
-Korea Astronomy and Space Science Institute (KASI) via the Korean public data
-portal (data.go.kr) and is subject to that portal's terms of use. The MIT
-license above applies to this project's source code.
