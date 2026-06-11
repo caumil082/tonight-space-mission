@@ -24,7 +24,9 @@ Tonight/
 │  ├─ data.js            ← 날짜·용어사전·난이도 도우미
 │  ├─ favorites.js       ← 관심 이벤트 저장 (☆)
 │  ├─ journal.js         ← 관측 일지 + 점수/배지
-│  ├─ backup.js          ← 백업/복원 (사진 포함, JSON 파일)
+│  ├─ backup.js          ← 백업/복원 (사진 포함, JSON 파일) + PDF 인쇄
+│  ├─ cloud-config.js    ← Firebase 설정(선택) — 비우면 사진은 기기 저장
+│  ├─ cloud.js           ← 사진 클라우드 업로드(Firebase Storage)
 │  ├─ recommend.js       ← 추천 점수 + 대표 이벤트 선정
 │  ├─ missions.js        ← 우주 미션 만들기
 │  ├─ quiz.js            ← 3문제 퀴즈 만들기
@@ -78,6 +80,15 @@ index.html?today=2026-06-11
 > 쉬운 설명과 관심☆은 별도 탭 없이 카드 안에 들어 있어요.
 
 다음에 추가하면 좋은 것: 날씨 연동, 2027년 데이터, 미션 종류 추가, Tauri Windows 앱.
+
+---
+
+## (선택) 사진 클라우드 저장 — Firebase
+
+기본은 사진이 **이 기기**에만 저장돼요. 여러 기기·친구와 사진을 공유하려면
+[`js/cloud-config.js`](js/cloud-config.js) 안내대로 무료 Firebase 프로젝트를 만들어 설정값을 넣으면 됩니다.
+설정하면 사진은 클라우드(Firebase Storage)에 올라가고 일지에는 그 주소(URL)만 저장돼요.
+(설정값을 비워두면 기존처럼 기기 저장 — 안전하게 자동 폴백)
 
 ---
 

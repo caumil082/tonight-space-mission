@@ -12,9 +12,12 @@
   const esc = s => String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-  // 보안: 사진은 진짜 이미지 data URL일 때만 허용 (불러온 백업의 조작된 값 차단)
+  // 보안: 사진은 (1) 진짜 이미지 data URL 또는 (2) https 주소(클라우드)만 허용
   function safePhotoSrc(p) {
-    return (typeof p === "string" && /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(p)) ? p : "";
+    if (typeof p !== "string") return "";
+    if (/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(p)) return p;
+    if (/^https:\/\/[^\s"'<>]+$/.test(p)) return p;   // 클라우드(https) 사진 URL
+    return "";
   }
   // 보안: 결과 값은 정해진 3가지만 (클래스 주입 방지)
   function safeResult(r) {
@@ -61,6 +64,18 @@
       try { return await resizeImage(input.files[0]); } catch { return null; }
     }
     return null; // 선택 안 함
+  }
+
+  // 저장용 사진: 클라우드가 설정돼 있으면 업로드 후 URL, 아니면(또는 실패 시) 기기 저장(data URL)
+  async function photoForSave(scope) {
+    const dataUrl = await readPhoto(scope);
+    if (!dataUrl) return null;            // 사진 선택 안 함
+    if (Cloud.configured()) {
+      const url = await Cloud.uploadDataUrl(dataUrl);
+      if (url) return url;                // ☁️ 클라우드 URL
+      // 업로드 실패 → 기기 저장으로 폴백
+    }
+    return dataUrl;                       // 📱 이 기기에 저장
   }
 
   const TODAY = AstroData.today();
@@ -556,8 +571,9 @@
       <div class="backup">
         <div class="backup-title">💾 데이터 백업</div>
         <div class="backup-desc">
-          기록과 사진은 이 브라우저에만 저장돼요. 파일로 백업해두면 컴퓨터를 바꿔도 안전해요.<br>
-          현재 <b>기록 ${s.records}개 · 약 ${s.kb}KB</b>
+          기록은 이 브라우저에 저장돼요. 파일로 백업해두면 컴퓨터를 바꿔도 안전해요.<br>
+          현재 <b>기록 ${s.records}개 · 약 ${s.kb}KB</b><br>
+          ${Cloud.configured() ? "☁️ 사진은 <b>클라우드</b>에 저장돼요 (여러 기기·친구와 공유)" : "📱 사진은 이 기기에 저장돼요 (클라우드 미설정)"}
         </div>
         <div class="backup-btns">
           <button class="btn-big sm" data-action="backup-export">📥 백업 파일(JSON)</button>
@@ -760,8 +776,8 @@
   async function saveMissionEntry(scope, id) {
     const v = efRead(scope);
     const patch = { result: v.result, sky: v.sky, place: v.place, note: v.note };
-    const photo = await readPhoto(scope);
-    if (photo) patch.photo = photo;            // 새 사진 골랐을 때만 교체
+    const photo = await photoForSave(scope);
+    if (photo) patch.photo = photo;            // 새 사진 골랐을 때만 교체(클라우드/기기)
     if (Journal.update(id, patch) === null) {
       alert("저장하지 못했어요. 사진이 너무 크면 더 작은 사진으로 다시 해보세요.");
       return;
@@ -773,7 +789,7 @@
   async function saveManualEntry(scope) {
     const v = efRead(scope);
     const obsDate = $(".ef-date", scope)?.value || AstroData.today();
-    const photo = await readPhoto(scope);
+    const photo = await photoForSave(scope);
     const ok = Journal.add({
       source: "manual", eventName: v.event || "관측 기록", eventDate: "",
       obsDate, result: v.result, sky: v.sky, place: v.place, note: v.note, photo: photo || ""
