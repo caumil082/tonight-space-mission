@@ -66,11 +66,63 @@
   /* =====================================================================
    *  공통 조각
    * ===================================================================== */
+  const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   function renderHeader() {
     const pts = Journal.totalPoints();
     const b = Journal.badge(pts);
     $("#badge").textContent = `${b.emoji} ${b.name}`;
     $("#points").textContent = `${pts}점`;
+  }
+
+  /* ---------- 미션 성공 연출 (점수 촤르륵 + ✨꽃가루 + "+점수") ---------- */
+  function celebrate(gained) {
+    const chip = $("#points");
+    const target = Journal.totalPoints();
+    const b = Journal.badge(target);
+    $("#badge").textContent = `${b.emoji} ${b.name}`;   // 배지 갱신
+    countUp(chip, Math.max(0, target - gained), target, 700);
+    floatPopup(chip, `✨ +${gained}`);
+    confettiBurst(chip);
+  }
+  function countUp(el, from, to, dur) {
+    if (reduceMotion || document.hidden || from === to) { el.textContent = `${to}점`; return; }
+    const t0 = performance.now();
+    (function step(now) {
+      const k = Math.min(1, (now - t0) / dur);
+      el.textContent = `${Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)))}점`;
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  function floatPopup(anchor, text) {
+    if (reduceMotion || document.hidden) return;
+    const r = anchor.getBoundingClientRect();
+    const el = document.createElement("div");
+    el.textContent = text;
+    Object.assign(el.style, { position: "fixed", left: r.left + "px", top: r.top + "px",
+      color: "#ffd66b", fontWeight: "800", fontSize: "1rem", zIndex: "9999",
+      pointerEvents: "none", textShadow: "0 2px 6px #000" });
+    document.body.appendChild(el);
+    el.animate([{ transform: "translateY(0)", opacity: 1 }, { transform: "translateY(-36px)", opacity: 0 }],
+      { duration: 1000, easing: "ease-out" }).onfinish = () => el.remove();
+  }
+  function confettiBurst(anchor) {
+    if (reduceMotion || document.hidden) return;
+    const r = anchor.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const colors = ["#ffd66b", "#6ba8ff", "#4ade80", "#f87171", "#c4b5fd"];
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement("div");
+      const sz = 6 + Math.random() * 5;
+      Object.assign(p.style, { position: "fixed", left: cx + "px", top: cy + "px",
+        width: sz + "px", height: sz + "px", background: colors[i % colors.length],
+        borderRadius: "2px", zIndex: "9999", pointerEvents: "none" });
+      document.body.appendChild(p);
+      const ang = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 70;
+      p.animate([{ transform: "translate(0,0) rotate(0deg)", opacity: 1 },
+        { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 40}px) rotate(${Math.random() * 540}deg)`, opacity: 0 }],
+        { duration: 800 + Math.random() * 400, easing: "cubic-bezier(.2,.7,.3,1)" }).onfinish = () => p.remove();
+    }
   }
 
   function diffBadge(ev) {
@@ -642,9 +694,11 @@
           eventName: t.dataset.evname,
           result: t.dataset.status
         });
-        ui.openForm = entry.id;
-        renderHeader();
-        renderMissions();
+        if (entry) {
+          ui.openForm = entry.id;
+          celebrate(Journal.resultInfo(t.dataset.status).points); // 점수 연출
+          renderMissions();
+        }
         break;
       }
       case "entry-edit": {
