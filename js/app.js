@@ -69,28 +69,46 @@
   const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function renderHeader() {
-    const pts = Journal.totalPoints();
-    const b = Journal.badge(pts);
-    $("#badge").textContent = `${b.emoji} ${b.name}`;
-    $("#points").textContent = `${pts}점`;
+    const xp = Journal.totalPoints();
+    const L = Journal.level(xp);
+    const st = Journal.streakGet().count;
+    $("#badge").textContent = `${L.emoji} Lv.${L.lv}`;
+    $("#points").textContent = `${xp} XP`;
+    const sc = $("#streak");
+    if (st > 0) { sc.hidden = false; sc.textContent = `🔥 ${st}일`; } else { sc.hidden = true; }
   }
 
-  /* ---------- 미션 성공 연출 (점수 촤르륵 + ✨꽃가루 + "+점수") ---------- */
-  function celebrate(gained) {
+  /* ---------- 미션 성공 연출 (XP 촤르륵 + ✨꽃가루 + 레벨업) ---------- */
+  function celebrate(gained, prevXp) {
     const chip = $("#points");
-    const target = Journal.totalPoints();
-    const b = Journal.badge(target);
-    $("#badge").textContent = `${b.emoji} ${b.name}`;   // 배지 갱신
-    countUp(chip, Math.max(0, target - gained), target, 700);
-    floatPopup(chip, `✨ +${gained}`);
+    const xp = Journal.totalPoints();
+    const L = Journal.level(xp);
+    const st = Journal.streakGet().count;
+    $("#badge").textContent = `${L.emoji} Lv.${L.lv}`;
+    const sc = $("#streak");
+    if (st > 0) { sc.hidden = false; sc.textContent = `🔥 ${st}일`; }
+    countUp(chip, Math.max(0, xp - gained), xp, 700);
+    floatPopup(chip, `✨ +${gained} XP`);
     confettiBurst(chip);
+    if (prevXp != null && Journal.level(prevXp).lv < L.lv) levelUp(L);  // 레벨업!
+  }
+  function levelUp(L) {
+    if (reduceMotion || document.hidden) return;
+    const el = document.createElement("div");
+    el.className = "levelup-toast";
+    el.textContent = `🎉 Lv.${L.lv} ${L.title} 달성!`;
+    document.body.appendChild(el);
+    el.animate([{ opacity: 0, transform: "translate(-50%,12px)" }, { opacity: 1, transform: "translate(-50%,0)" },
+      { opacity: 1, transform: "translate(-50%,0)" }, { opacity: 0, transform: "translate(-50%,-12px)" }],
+      { duration: 2200, easing: "ease-out" }).onfinish = () => el.remove();
+    confettiBurst($("#badge"));
   }
   function countUp(el, from, to, dur) {
-    if (reduceMotion || document.hidden || from === to) { el.textContent = `${to}점`; return; }
+    if (reduceMotion || document.hidden || from === to) { el.textContent = `${to} XP`; return; }
     const t0 = performance.now();
     (function step(now) {
       const k = Math.min(1, (now - t0) / dur);
-      el.textContent = `${Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)))}점`;
+      el.textContent = `${Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)))} XP`;
       if (k < 1) requestAnimationFrame(step);
     })(t0);
   }
@@ -247,14 +265,17 @@
   }
 
   function scoreBanner() {
-    const pts = Journal.totalPoints();
-    const b = Journal.badge(pts);
+    const xp = Journal.totalPoints();
+    const L = Journal.level(xp);
+    const st = Journal.streakGet().count;
+    const pct = Math.round(L.progress * 100);
     return `
       <div class="score-banner">
-        <div class="big-badge">${b.emoji}</div>
-        <div>
-          <div class="badge-name">${b.name}</div>
-          <div class="badge-pts">${pts}점</div>
+        <div class="lvl-badge"><span class="lvl-emoji">${L.emoji}</span><span class="lvl-num">Lv.${L.lv}</span></div>
+        <div class="lvl-main">
+          <div class="lvl-title">${L.title}${st > 0 ? ` <span class="streak-inline">🔥 ${st}일 연속</span>` : ""}</div>
+          <div class="xpbar"><span style="width:${pct}%"></span></div>
+          <div class="xp-text">${xp} XP${L.next ? ` · 다음 레벨까지 ${L.toNext}` : " · 최고 레벨!"}</div>
         </div>
       </div>`;
   }
@@ -724,6 +745,7 @@
       }
       case "mission-result": {
         // 미션 결과 → 일지에 새 기록 만들고, 상세 입력폼 펼치기
+        const prevXp = Journal.totalPoints();
         const entry = Journal.add({
           source: "mission",
           missionId: t.dataset.mid,
@@ -734,7 +756,7 @@
         });
         if (entry) {
           ui.openForm = entry.id;
-          celebrate(Journal.resultInfo(t.dataset.status).points); // 점수 연출
+          celebrate(Journal.resultInfo(t.dataset.status).points, prevXp); // XP·레벨업 연출
           renderMissions();
         }
         break;
