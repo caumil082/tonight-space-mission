@@ -176,21 +176,28 @@ html, body {
 /* 중앙: 현상에 맞는 움직이는 이미지 */
 .hero-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2; }
 
-/* 좌상단: 달 뒷면(크레이터) */
-.moon-corner { position: absolute; top: 8px; left: 8px; z-index: 1; }
-.moonface {
-  position: relative; width: 46px; height: 46px; border-radius: 50%;
-  background: radial-gradient(circle at 38% 36%, #e8eaf0, #aeb3c4 70%, #8b90a6);
-  box-shadow: 0 0 14px #cfd6ff55;
+/* 가운데를 가로지르는 은하수 (연하게) */
+.hero-milkyway {
+  position: absolute; inset: -25%; z-index: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 40%, rgba(180,200,255,.14) 47%, rgba(225,228,255,.22) 50%, rgba(180,200,255,.14) 53%, transparent 60%);
+  filter: blur(7px);
 }
-.moonface i { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: #00000026; }
-.moonface i.sm { width: 6px; height: 6px; }
 
-/* 우상단(D-day 아래): 염소자리 */
-.const-tr { position: absolute; top: 44px; right: 6px; width: 92px; height: 62px; z-index: 1; opacity: .75; }
-.const-tr .hero-const { width: 92px; height: 62px; }
-.hero-const line { stroke: rgba(160,190,255,.85); stroke-width: 1.1; }
-.hero-const circle { fill: #dbe6ff; }
+/* 배경 별자리(염소자리) — 크고 연하게 */
+.const-bg { position: absolute; inset: 0; z-index: 0; display: flex; align-items: center; justify-content: center; opacity: .3; }
+.const-bg .hero-const { width: 80%; height: 88%; }
+.hero-const line { stroke: rgba(170,195,255,.9); stroke-width: 1.1; }
+.hero-const circle { fill: #e3ecff; }
+
+/* 좌상단: 큰 달 (원의 1/4만 보이게) */
+.moon-corner { position: absolute; top: -66px; left: -66px; z-index: 1; }
+.moonface {
+  position: relative; width: 132px; height: 132px; border-radius: 50%;
+  background: radial-gradient(circle at 62% 62%, #eef0f6, #b4b9c9 68%, #8b90a6);
+  box-shadow: 0 0 26px #cfd6ff44;
+}
+.moonface i { position: absolute; width: 13px; height: 13px; border-radius: 50%; background: #0000002b; }
+.moonface i.sm { width: 9px; height: 9px; }
 
 /* 하단을 걷는 염소 🐐 */
 .goat-walker { position: absolute; bottom: 4px; left: 4%; z-index: 2; animation: goatWalk 13s ease-in-out infinite; }

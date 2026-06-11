@@ -251,17 +251,18 @@
     return `<div class="h-twinkle">✦</div>`;
   }
 
-  // 좌상단 달 뒷면(크레이터) 그림
-  const MOONFACE = `<div class="moonface"><i style="top:9px;left:12px"></i><i style="top:21px;left:25px"></i><i class="sm" style="top:29px;left:10px"></i><i class="sm" style="top:11px;left:29px"></i></div>`;
+  // 좌상단 큰 달(1/4만 보임) — 크레이터는 보이는 우하단 사분면에 배치
+  const MOONFACE = `<div class="moonface"><i style="top:80px;left:86px"></i><i style="top:100px;left:106px"></i><i class="sm" style="top:74px;left:110px"></i><i class="sm" style="top:106px;left:80px"></i></div>`;
 
-  // 무대: 좌상단=달뒷면, 중앙=현상 애니메이션, 우상단(D-day 아래)=염소자리, 하단=걷는 염소🐐
+  // 무대: 은하수+배경 별자리(연하게), 좌상단 큰 달(1/4), 중앙 현상 애니메이션, 하단 걷는 염소🐐
   function heroStage(ev, ddayPill, todayClass) {
     const kind = heroKind(ev);
     return `
       <div class="hero-stage kind-${kind}">
+        <div class="hero-milkyway"></div>
+        <div class="const-bg">${constellationSVG()}</div>
         <div class="moon-corner">${MOONFACE}</div>
         <div class="hero-center">${heroCenter(kind)}</div>
-        <div class="const-tr">${constellationSVG()}</div>
         <span class="goat-walker"><span class="goat" aria-hidden="true">🐐</span></span>
         <span class="hero-dday ${todayClass}">${ddayPill}</span>
       </div>`;
