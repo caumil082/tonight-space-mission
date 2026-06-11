@@ -560,10 +560,14 @@
           현재 <b>기록 ${s.records}개 · 약 ${s.kb}KB</b>
         </div>
         <div class="backup-btns">
-          <button class="btn-big sm" data-action="backup-export">📥 백업 파일 내보내기</button>
+          <button class="btn-big sm" data-action="backup-export">📥 백업 파일(JSON)</button>
           <label class="btn-big sm backup-import">📤 백업 불러오기
             <input type="file" id="backup-file" accept="application/json,.json" hidden>
           </label>
+          <button class="btn-big sm" data-action="export-pdf">📄 PDF로 저장</button>
+        </div>
+        <div class="backup-desc" style="margin-top:8px">
+          · <b>JSON</b>은 앱에서 복원용 · <b>PDF</b>는 PC에 보관·다시 보기용 (인쇄 창에서 "PDF로 저장" 선택)
         </div>
       </div>`;
 
@@ -855,11 +859,50 @@
       }
       case "card-toggle": { const c = t.closest(".ev-card"); if (c) c.classList.toggle("open"); break; }
       case "backup-export": Backup.download(); break;
+      case "export-pdf": exportPdf(); break;
       case "goto-mission": switchTab("mission"); break;
       case "quiz-start":  startQuiz(); break;
       case "quiz-answer": answerQuiz(Number(t.dataset.i)); break;
       case "quiz-next":   nextQuiz(); break;
     }
+  }
+
+  // 📄 관측 기록 PDF로 저장 (인쇄 → "PDF로 저장")
+  function exportPdf() {
+    const entries = Journal.all().slice().reverse(); // 오래된 것부터(시간순)
+    const L = Journal.level();
+    const rows = entries.map(e => {
+      const r = Journal.resultInfo(e.result);
+      const ph = safePhotoSrc(e.photo);
+      const tags = [e.sky && `🌤 ${esc(e.sky)}`, e.place && `📍 ${esc(e.place)}`,
+        e.source === "mission" ? "미션" : ""].filter(Boolean).join(" · ");
+      return `
+        <div class="pr-entry">
+          <div class="pr-head">
+            <span class="pr-date">${AstroData.pretty(e.obsDate || e.at)}</span>
+            <span class="pr-event">${esc(e.eventName || "관측 기록")}</span>
+            <span class="pr-result">${r.label}</span>
+          </div>
+          ${tags ? `<div class="pr-tags">${tags}</div>` : ""}
+          ${ph ? `<img class="pr-photo" src="${ph}" alt="관측 사진">` : ""}
+          ${e.note ? `<div class="pr-note">📝 ${esc(e.note)}</div>` : ""}
+        </div>`;
+    }).join("");
+
+    const report = document.createElement("div");
+    report.id = "print-report";
+    report.innerHTML = `
+      <h1>🌌 오늘밤 우주미션 — 나의 관측 기록</h1>
+      <p class="pr-meta">생성일 ${AstroData.pretty(AstroData.today())} · 총 ${entries.length}건 · Lv.${L.lv} ${L.title} (${L.xp} XP)</p>
+      <hr>
+      ${entries.length ? rows : `<p>아직 관측 기록이 없어요.</p>`}
+      <p class="pr-foot">— 오늘밤 우주미션 (한국천문연구원 천문현상 정보 기반)</p>`;
+    document.body.appendChild(report);
+
+    const cleanup = () => { const el = document.getElementById("print-report"); if (el) el.remove(); window.removeEventListener("afterprint", cleanup); };
+    window.addEventListener("afterprint", cleanup);
+    try { window.print(); } catch (e) {}
+    setTimeout(cleanup, 60000); // 혹시 afterprint가 안 오면 정리
   }
 
   // 백업 파일 선택 → 복원 (#view의 change 이벤트로 처리)
