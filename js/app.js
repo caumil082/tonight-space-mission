@@ -12,6 +12,15 @@
   const esc = s => String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+  // 보안: 사진은 진짜 이미지 data URL일 때만 허용 (불러온 백업의 조작된 값 차단)
+  function safePhotoSrc(p) {
+    return (typeof p === "string" && /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(p)) ? p : "";
+  }
+  // 보안: 결과 값은 정해진 3가지만 (클래스 주입 방지)
+  function safeResult(r) {
+    return ["success", "partial", "fail"].includes(r) ? r : "success";
+  }
+
   // 업로드한 사진을 작게 줄여서 data URL로 변환 (localStorage 용량 절약)
   function resizeImage(file, maxSize = 900, quality = 0.7) {
     return new Promise((resolve, reject) => {
@@ -318,8 +327,8 @@
         <div class="mission-done">
           <span>${r.label} (+${r.points})${extra ? " · " + esc(extra) : ""}</span>
           <span class="row-btns">
-            <button class="btn-clear" data-action="entry-edit" data-id="${entry.id}">기록 수정</button>
-            <button class="btn-clear" data-action="entry-delete" data-id="${entry.id}">삭제</button>
+            <button class="btn-clear" data-action="entry-edit" data-id="${esc(entry.id)}">기록 수정</button>
+            <button class="btn-clear" data-action="entry-delete" data-id="${esc(entry.id)}">삭제</button>
           </span>
         </div>
         ${entry.note ? `<div class="entry-note">📝 ${esc(entry.note)}</div>` : ""}`;
@@ -354,7 +363,7 @@
   // 일지 상세 입력폼 (미션 안에서 펼쳐짐)
   function entryForm(entry, m) {
     return `
-      <div class="entry-form" data-id="${entry.id}">
+      <div class="entry-form" data-id="${esc(entry.id)}">
         <div class="ef-row">
           <label>관측 결과</label>
           <select class="ef-result">${options(Journal.RESULTS, entry.result, true)}</select>
@@ -374,13 +383,13 @@
           <label>느낀 점</label>
           <textarea class="ef-note" rows="2" placeholder="달이 생각보다 밝았다!">${esc(entry.note)}</textarea>
         </div>
-        ${entry.photo ? `<div class="ef-photo-preview"><img src="${entry.photo}" alt="관측 사진"></div>` : ""}
+        ${safePhotoSrc(entry.photo) ? `<div class="ef-photo-preview"><img src="${safePhotoSrc(entry.photo)}" alt="관측 사진"></div>` : ""}
         <div class="ef-row">
           <label>사진 ${entry.photo ? "바꾸기" : "추가"} (선택)</label>
           <input class="ef-photo" type="file" accept="image/*">
         </div>
         <div class="ef-actions">
-          <button class="btn-big sm" data-action="entry-save" data-id="${entry.id}">저장 💾</button>
+          <button class="btn-big sm" data-action="entry-save" data-id="${esc(entry.id)}">저장 💾</button>
         </div>
       </div>`;
   }
@@ -473,14 +482,14 @@
       <div class="card journal-card">
         <div class="card-top">
           <span class="ev-name">${esc(e.eventName || "관측 기록")}</span>
-          <span class="result-badge result-${e.result}">${r.label}</span>
+          <span class="result-badge result-${safeResult(e.result)}">${r.label}</span>
         </div>
         <div class="card-sub">관측일 ${AstroData.pretty(e.obsDate || e.at)}</div>
         ${tags ? `<div class="tags">${tags}</div>` : ""}
-        ${e.photo ? `<div class="journal-photo"><img src="${e.photo}" alt="관측 사진"></div>` : ""}
+        ${safePhotoSrc(e.photo) ? `<div class="journal-photo"><img src="${safePhotoSrc(e.photo)}" alt="관측 사진"></div>` : ""}
         ${e.note ? `<div class="entry-note">📝 ${esc(e.note)}</div>` : ""}
         <div class="row-btns right">
-          <button class="btn-clear" data-action="entry-delete" data-id="${e.id}">삭제</button>
+          <button class="btn-clear" data-action="entry-delete" data-id="${esc(e.id)}">삭제</button>
         </div>
       </div>`;
   }
