@@ -222,35 +222,45 @@
     return "star";
   }
 
-  // 계절 별자리를 SVG로 (히어로 카드 안에서 천천히 흐름)
+  // 중심 별자리(FEATURED=염소자리) SVG — 우하단 고정용
   function constellationSVG() {
     const Sky = window.Sky;
     if (!Sky) return "";
-    // 중심 별자리: 고정(FEATURED=염소자리) 우선, 없으면 계절 별자리
     const c = Sky.FEATURED || (Sky.CONSTS[Sky.season()] || [])[0];
     if (!c) return "";
     const P = c.stars;
     const lines = c.lines.map(([i, j]) =>
       `<line x1="${(P[i][0]*100).toFixed(1)}" y1="${(P[i][1]*100).toFixed(1)}" x2="${(P[j][0]*100).toFixed(1)}" y2="${(P[j][1]*100).toFixed(1)}"/>`).join("");
-    const dots = P.map(([x, y]) => `<circle cx="${(x*100).toFixed(1)}" cy="${(y*100).toFixed(1)}" r="1.8"/>`).join("");
-    return `<svg class="hero-const" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-      ${lines}${dots}
-      <text x="${(P[0][0]*100).toFixed(1)}" y="${(P[0][1]*100-3).toFixed(1)}" class="hero-const-name">${esc(c.name)}</text>
-    </svg>`;
+    const dots = P.map(([x, y]) => `<circle cx="${(x*100).toFixed(1)}" cy="${(y*100).toFixed(1)}" r="2.2"/>`).join("");
+    return `<svg class="hero-const" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${lines}${dots}</svg>`;
   }
 
-  // 움직이는 이미지 무대 (계절 별자리 + 현상별 애니메이션 + D-day)
+  // 중앙의 "현상에 맞는 움직이는 이미지"
+  function heroCenter(kind) {
+    if (kind === "meteor") {
+      const mets = [{ t: 8, l: -8, d: 0 }, { t: 40, l: -22, d: .5 }, { t: -8, l: 12, d: 1 }, { t: 58, l: 2, d: 1.5 }, { t: 24, l: -34, d: 2 }];
+      return `<div class="c-meteors">${mets.map(m =>
+        `<span class="h-meteor" style="top:${m.t}px;left:${m.l}%;animation-delay:${m.d}s"></span>`).join("")}</div>`;
+    }
+    if (kind === "moon")
+      return `<div class="h-moon big"><i class="crater" style="top:14px;left:18px"></i><i class="crater" style="top:32px;left:38px"></i><i class="crater sm" style="top:40px;left:16px"></i></div>`;
+    if (kind === "eclipse")
+      return `<div class="h-moon big h-eclipse"></div>`;
+    if (kind === "planet")
+      return `<div class="h-planet big"><span class="h-ring"></span><span class="h-orbit"></span></div>`;
+    return `<div class="h-twinkle">✦</div>`;
+  }
+
+  // 움직이는 이미지 무대 (중앙=현상 애니메이션, 우하단=염소자리+염소, D-day)
   function heroStage(ev, ddayPill, todayClass) {
     const kind = heroKind(ev);
-    let overlay = "";
-    if (kind === "meteor") overlay = `<span class="h-meteor"></span><span class="h-meteor d2"></span><span class="h-meteor d3"></span>`;
-    else if (kind === "moon") overlay = `<div class="h-moon"></div>`;
-    else if (kind === "eclipse") overlay = `<div class="h-moon h-eclipse"></div>`;
-    else if (kind === "planet") overlay = `<div class="h-planet"><span class="h-orbit"></span></div>`;
     return `
       <div class="hero-stage kind-${kind}">
-        ${constellationSVG()}
-        ${overlay}
+        <div class="hero-center">${heroCenter(kind)}</div>
+        <div class="hero-corner">
+          <span class="goat" aria-hidden="true">🐐</span>
+          ${constellationSVG()}
+        </div>
         <span class="hero-dday ${todayClass}">${ddayPill}</span>
       </div>`;
   }
