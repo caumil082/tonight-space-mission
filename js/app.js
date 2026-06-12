@@ -968,6 +968,8 @@
         break;
       }
       case "locate": locate(t.closest(".entry-form")); break;
+      case "wiki-search": doWikiSearch($(".wiki-input")?.value); break;
+      case "wiki-chip": doWikiSearch(t.dataset.q); break;
       case "card-toggle": { const c = t.closest(".ev-card"); if (c) c.classList.toggle("open"); break; }
       case "backup-export": Backup.download(); break;
       case "export-pdf": exportPdf(); break;
@@ -1041,9 +1043,63 @@
   /* =====================================================================
    *  탭 전환 + 시작
    * ===================================================================== */
+  /* =====================================================================
+   *  탭 6: 검색 (위키백과 천체 정보)
+   * ===================================================================== */
+  let wikiState = {};
+
+  function renderSearch() {
+    const st = wikiState;
+    const chips = ["안드로메다 은하", "토성", "오리온자리", "북두칠성", "플레이아데스 성단", "블랙홀"];
+    let html = `
+      <p class="hint">🔭 천체 이름을 검색하면 <b>위키백과</b>에서 정보를 가져와요. (예: 토성, 안드로메다 은하, 오리온자리)</p>
+      <div class="wiki-bar">
+        <input class="wiki-input" type="text" placeholder="천체 이름 검색…" value="${esc(st.query || "")}">
+        <button class="btn-big sm" data-action="wiki-search">검색</button>
+      </div>
+      <div class="wiki-chips">${chips.map(c => `<button class="chip" data-action="wiki-chip" data-q="${esc(c)}">${esc(c)}</button>`).join("")}</div>`;
+
+    if (st.loading) html += `<div class="empty">불러오는 중… ⏳</div>`;
+    else if (st.error) html += `<div class="empty">${esc(st.error)}</div>`;
+    else if (st.result === null && st.query) html += `<div class="empty">"${esc(st.query)}" 결과를 못 찾았어요.<br>다른 이름으로 검색해보세요.</div>`;
+    else if (st.result) html += wikiCard(st.result);
+
+    $("#view").innerHTML = html;
+  }
+
+  function wikiCard(r) {
+    const img = /^https:\/\/[^\s"'<>]+$/.test(r.thumb) ? r.thumb : "";
+    return `
+      <div class="card wiki-card">
+        <div class="card-top">
+          <span class="ev-name">${esc(r.title)}</span>
+          ${r.lang === "en" ? `<span class="tag">영어 위키</span>` : ""}
+        </div>
+        ${r.description ? `<div class="card-sub">${esc(r.description)}</div>` : ""}
+        ${img ? `<div class="wiki-photo"><img src="${img}" alt="${esc(r.title)}" referrerpolicy="no-referrer" onerror="this.style.display='none'"></div>` : ""}
+        <div class="wiki-extract">${esc(r.extract)}</div>
+        ${/^https:\/\/[^\s"'<>]+$/.test(r.url) ? `<a class="btn-big sm wiki-more" href="${r.url}" target="_blank" rel="noopener">위키백과에서 더 보기 ↗</a>` : ""}
+      </div>`;
+  }
+
+  async function doWikiSearch(q) {
+    q = (q || "").trim();
+    if (!q) return;
+    wikiState = { query: q, loading: true };
+    renderSearch();
+    try {
+      const r = await Wiki.search(q);
+      wikiState = { query: q, result: r };   // r 가 null이면 "결과 없음"
+    } catch (e) {
+      wikiState = { query: q, error: "검색 중 문제가 생겼어요. 인터넷 연결을 확인해 주세요." };
+    }
+    if (ui.tab === "search") renderSearch();
+  }
+
   const TABS = {
     today: renderToday, calendar: renderCalendar,
-    mission: renderMissions, journal: renderJournal, quiz: renderQuiz
+    mission: renderMissions, journal: renderJournal, quiz: renderQuiz,
+    search: renderSearch
   };
 
   function rerender() { TABS[ui.tab](); }
@@ -1076,6 +1132,11 @@
       tab.addEventListener("click", () => switchTab(tab.dataset.tab)));
     $("#view").addEventListener("click", onViewClick);
     $("#view").addEventListener("change", onViewChange);
+    $("#view").addEventListener("keydown", (e) => {
+      if (e.target.classList && e.target.classList.contains("wiki-input") && e.key === "Enter") {
+        e.preventDefault(); doWikiSearch(e.target.value);
+      }
+    });
     switchTab("today");
 
     // 서비스워커 등록 (네트워크 우선 — 항상 최신 + 오프라인 지원)
