@@ -973,6 +973,11 @@
       case "locate": locate(t.closest(".entry-form")); break;
       case "wiki-search": doWikiSearch($(".wiki-input")?.value); break;
       case "wiki-chip": doWikiSearch(t.dataset.q); break;
+      case "search-mode": ui.searchMode = t.dataset.mode; renderSearch(); break;
+      case "dso-search": runDsoSearch(); break;
+      case "dso-open": { const o = (ui.dso.results || []).find(x => x.n === t.dataset.name); if (o) { ui.dso.selected = o; renderSearch(); } break; }
+      case "dso-back": ui.dso.selected = null; renderSearch(); break;
+      case "dso-wiki": ui.searchMode = "wiki"; doWikiSearch(t.dataset.q); break;
       case "card-toggle": { const c = t.closest(".ev-card"); if (c) c.classList.toggle("open"); break; }
       case "backup-export": Backup.download(); break;
       case "export-pdf": exportPdf(); break;
@@ -1052,22 +1057,99 @@
   let wikiState = {};
 
   function renderSearch() {
+    if (!ui.searchMode) ui.searchMode = "wiki";
+    if (!ui.dso) ui.dso = { q: "", k: "", magMin: -5, magMax: 13, results: null, selected: null };
+    const mode = ui.searchMode;
+    let html = `
+      <div class="search-modes">
+        <button class="chip ${mode === "wiki" ? "on" : ""}" data-action="search-mode" data-mode="wiki">📖 위키백과</button>
+        <button class="chip ${mode === "dso" ? "on" : ""}" data-action="search-mode" data-mode="dso">🌌 딥스카이 목록</button>
+      </div>`;
+    html += mode === "dso" ? dsoPaneHTML() : wikiPaneHTML();
+    $("#view").innerHTML = html;
+  }
+
+  function wikiPaneHTML() {
     const st = wikiState;
     const chips = ["안드로메다 은하", "토성", "오리온자리", "북두칠성", "플레이아데스 성단", "블랙홀"];
     let html = `
-      <p class="hint">🔭 천체 이름을 검색하면 <b>위키백과</b>에서 정보를 가져와요. (예: 토성, 안드로메다 은하, 오리온자리)</p>
+      <p class="hint">🔭 천체 이름을 검색하면 <b>위키백과</b>에서 정보를 가져와요. (예: 토성, 안드로메다 은하)</p>
       <div class="wiki-bar">
         <input class="wiki-input" type="text" placeholder="천체 이름 검색…" value="${esc(st.query || "")}">
         <button class="btn-big sm" data-action="wiki-search">검색</button>
       </div>
       <div class="wiki-chips">${chips.map(c => `<button class="chip" data-action="wiki-chip" data-q="${esc(c)}">${esc(c)}</button>`).join("")}</div>`;
-
     if (st.loading) html += `<div class="empty">불러오는 중… ⏳</div>`;
     else if (st.error) html += `<div class="empty">${esc(st.error)}</div>`;
     else if (st.result === null && st.query) html += `<div class="empty">"${esc(st.query)}" 결과를 못 찾았어요.<br>다른 이름으로 검색해보세요.</div>`;
     else if (st.result) html += wikiCard(st.result);
+    return html;
+  }
 
-    $("#view").innerHTML = html;
+  /* ----- 딥스카이 목록 검색 ----- */
+  function dsoPaneHTML() {
+    const st = ui.dso;
+    if (st.selected) return dsoDetailHTML(st.selected);
+    const opts = `<option value="">전체 별자리</option>` +
+      Dso.constellations().map(c => `<option value="${esc(c)}" ${st.k === c ? "selected" : ""}>${esc(c)}</option>`).join("");
+    let html = `
+      <p class="hint">🌌 딥스카이 천체(은하·성운·성단)를 이름·번호·별자리·밝기로 찾아보세요. 사진은 실제 DSS 관측 영상이에요.</p>
+      <div class="wiki-bar">
+        <input class="dso-q" type="text" placeholder="이름·번호 (예: M31, NGC 7000, 안드로메다)" value="${esc(st.q || "")}">
+        <button class="btn-big sm" data-action="dso-search">검색</button>
+      </div>
+      <div class="dso-filters">
+        <select class="dso-const">${opts}</select>
+        <span class="dso-mag">등급 <input class="dso-magmin" type="number" step="0.5" value="${st.magMin}"> ~ <input class="dso-magmax" type="number" step="0.5" value="${st.magMax}"></span>
+      </div>`;
+    const res = st.results;
+    if (res) {
+      html += `<h2 class="sec">결과 ${res.length}${res.length >= 80 ? "+" : ""}개</h2>`;
+      html += res.length ? res.map(dsoRow).join("") : `<div class="empty">조건에 맞는 천체가 없어요.</div>`;
+    } else {
+      html += `<div class="empty">검색 버튼을 누르면 결과가 나와요.<br>(비워두고 검색하면 밝은 순으로 보여줘요)</div>`;
+    }
+    return html;
+  }
+
+  function dsoRow(o) {
+    return `
+      <div class="card dso-row" data-action="dso-open" data-name="${esc(o.n)}">
+        <div class="dso-row-top">
+          <span class="dso-name">${o.m ? esc(o.m) + " · " : ""}${esc(o.n)}</span>
+          ${o.v != null ? `<span class="dso-mag-badge">${o.v}등급</span>` : ""}
+        </div>
+        <div class="dso-row-sub">${esc(o.t)} · ${esc(o.k)}${o.c ? " · " + esc(o.c) : ""}</div>
+      </div>`;
+  }
+
+  function dsoDetailHTML(o) {
+    return `
+      <button class="btn-clear" data-action="dso-back">← 목록으로</button>
+      <div class="card wiki-card">
+        <div class="card-top"><span class="ev-name">${o.m ? esc(o.m) + " · " : ""}${esc(o.n)}</span></div>
+        ${o.c ? `<div class="card-sub">${esc(o.c)}</div>` : ""}
+        <div class="wiki-photo"><img src="${Dso.imageUrl(o)}" alt="${esc(o.n)}" referrerpolicy="no-referrer" onerror="this.style.display='none'"></div>
+        <div class="dso-cap">📷 DSS 관측 영상 (좌표 기반)</div>
+        <table class="wiki-info">
+          <tr><td class="wi-k">종류</td><td class="wi-v">${esc(o.t)}</td></tr>
+          <tr><td class="wi-k">별자리</td><td class="wi-v">${esc(o.k)}</td></tr>
+          ${o.v != null ? `<tr><td class="wi-k">겉보기 등급</td><td class="wi-v">${o.v}등급</td></tr>` : ""}
+          <tr><td class="wi-k">적경/적위</td><td class="wi-v">${o.r}° / ${o.d}°</td></tr>
+        </table>
+        <button class="btn-big sm wiki-more" data-action="dso-wiki" data-q="${esc(o.m || o.c || o.n)}">📖 위키백과에서 보기</button>
+      </div>`;
+  }
+
+  function runDsoSearch() {
+    const st = ui.dso;
+    st.q = $(".dso-q") ? $(".dso-q").value : st.q;
+    st.k = $(".dso-const") ? $(".dso-const").value : st.k;
+    const mn = parseFloat($(".dso-magmin")?.value); const mx = parseFloat($(".dso-magmax")?.value);
+    st.magMin = isNaN(mn) ? -5 : mn; st.magMax = isNaN(mx) ? 13 : mx;
+    st.results = Dso.search({ q: st.q, k: st.k, magMin: st.magMin, magMax: st.magMax });
+    st.selected = null;
+    renderSearch();
   }
 
   function wikiCard(r) {
@@ -1142,9 +1224,9 @@
     $("#view").addEventListener("click", onViewClick);
     $("#view").addEventListener("change", onViewChange);
     $("#view").addEventListener("keydown", (e) => {
-      if (e.target.classList && e.target.classList.contains("wiki-input") && e.key === "Enter") {
-        e.preventDefault(); doWikiSearch(e.target.value);
-      }
+      if (!e.target.classList || e.key !== "Enter") return;
+      if (e.target.classList.contains("wiki-input")) { e.preventDefault(); doWikiSearch(e.target.value); }
+      else if (e.target.classList.contains("dso-q")) { e.preventDefault(); runDsoSearch(); }
     });
     switchTab("today");
 

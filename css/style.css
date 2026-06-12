@@ -508,7 +508,24 @@ html, body {
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
 
-/* ---------- 검색(위키백과) ---------- */
+/* ---------- 검색(위키백과 / 딥스카이) ---------- */
+.search-modes { display: flex; gap: 8px; margin: 4px 0 12px; }
+.search-modes .chip { flex: 1; padding: 9px 0; }
+.dso-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.dso-filters select, .dso-filters input {
+  background: var(--card); border: 1px solid #ffffff22; color: var(--text);
+  border-radius: 9px; padding: 8px 10px; font-size: .9rem; font-family: inherit;
+}
+.dso-mag { font-size: .85rem; color: var(--muted); display: inline-flex; align-items: center; gap: 5px; }
+.dso-mag input { width: 56px; color-scheme: dark; }
+.dso-row { cursor: pointer; padding: 11px 14px; }
+.dso-row:hover { border-color: var(--accent2); }
+.dso-row-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dso-name { font-weight: 800; font-size: 1.02rem; }
+.dso-mag-badge { font-size: .78rem; font-weight: 700; color: var(--accent); background: #ffffff12; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.dso-row-sub { color: var(--muted); font-size: .85rem; margin-top: 4px; }
+.dso-cap { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 6px; }
+
 .wiki-bar { display: flex; gap: 8px; margin: 4px 0 10px; }
 .wiki-input {
   flex: 1; min-width: 0; background: var(--card); border: 1px solid #ffffff22; color: var(--text);
