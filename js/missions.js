@@ -34,16 +34,15 @@ const Missions = (() => {
       icon = "🌒"; title = "식(蝕) 관찰 미션";
       desc = "해/달이 가려지는 모습을 안전하게 관찰하고, 시작과 끝 시간을 적어보세요.";
     } else {
-      icon = "📣"; title = "가족에게 1분 설명 미션";
-      desc = `오늘의 천문현상 "${ev.event}"을(를) 가족에게 1분 동안 쉽게 설명해 주세요.`;
+      return null;   // 해당하는 관측 미션이 없는 현상은 미션을 만들지 않음
     }
 
     return { id, ev, icon, title, desc, difficulty: diff };
   }
 
-  // 오늘 + 다가오는 며칠의 미션들
+  // 오늘 + 다가오는 며칠의 미션들 (미션이 없는 현상은 제외)
   function build(fromDate, days) {
-    return AstroData.upcoming(fromDate, days).map(missionFor);
+    return AstroData.upcoming(fromDate, days).map(missionFor).filter(Boolean);
   }
 
   return { missionFor, build };
