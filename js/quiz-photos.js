@@ -30,6 +30,10 @@ window.QUIZ_PHOTOS = (function () {
     { name: "말머리 성운",    cat: "우주", url: F("Horsehead-Hubble.jpg") },
     { name: "플레이아데스 성단", cat: "우주", url: F("Pleiades large.jpg") },
     { name: "창조의 기둥",    cat: "우주", url: F("Eagle nebula pillars.jpg") },
+    { name: "헤르쿨레스 성단",   cat: "우주", url: F("Messier 13.jpg") },
+    { name: "오메가 센타우리 성단", cat: "우주", url: F("Omega Centauri by ESO.jpg") },
+    { name: "페르세우스 이중성단", cat: "우주", url: F("Double Cluster.jpg") },
+    { name: "프톨레마이오스 성단", cat: "우주", url: F("Messier 7.jpg") },
     // ✨ 별자리 (공식 IAU 차트)
     { name: "오리온자리",       cat: "별자리", url: F("Orion IAU.svg") },
     { name: "큰곰자리",         cat: "별자리", url: F("Ursa Major IAU.svg") },
