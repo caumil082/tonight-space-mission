@@ -35,13 +35,9 @@ const Quiz = (() => {
 
   /* ---------- 문제 만들기 ---------- */
 
-  // ⭐ 사진 맞추기: 실제 사진/그림을 보고 이름 고르기
-  function qPhoto(used) {
+  // ⭐ 사진 맞추기: 특정 이미지(item)로 문제 만들기 (보기는 같은 종류에서 우선)
+  function qFor(item) {
     const all = window.QUIZ_PHOTOS || [];
-    const pool = all.filter(p => !used.has(p.name));
-    const item = sample(pool.length ? pool : all, 1)[0];
-    used.add(item.name);
-    // 같은 종류(행성/우주/별자리)에서 가짜 보기 우선
     let distract = sample(all.filter(p => p.cat === item.cat && p.name !== item.name), 3).map(p => p.name);
     if (distract.length < 3) {
       const more = all.filter(p => p.name !== item.name && !distract.includes(p.name)).map(p => p.name);
@@ -52,6 +48,21 @@ const Quiz = (() => {
             : item.cat === "별자리" ? "이 별자리는 무엇일까요?"
             : "이 우주 사진은 무엇일까요?";
     return { kind: "photo", q, image: item.url, choices, answerIndex, explain: `정답은 "${item.name}" 입니다.` };
+  }
+
+  // 최근 출제 기록(반복 방지)
+  const SEEN_KEY = "tonight.quizseen.v1";
+  function loadSeen() { try { return JSON.parse(localStorage.getItem(SEEN_KEY)) || []; } catch { return []; } }
+  function saveSeen(names) {
+    const prev = loadSeen().filter(n => !names.includes(n));
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...names, ...prev].slice(0, 14)));
+  }
+  // 후보에서 1개 뽑기 (이미 고른 것·최근 출제 제외, 없으면 완화)
+  function pickItem(list, seen, chosen) {
+    const taken = new Set(chosen.map(c => c.name));
+    let pool = list.filter(p => !taken.has(p.name) && !seen.includes(p.name));
+    if (!pool.length) pool = list.filter(p => !taken.has(p.name));
+    return pool.length ? sample(pool, 1)[0] : null;
   }
 
   // ① 현상 맞히기: 진짜 현상 1개 vs 가짜 현상들
@@ -110,8 +121,15 @@ const Quiz = (() => {
   function build(fromDate) {
     const photos = window.QUIZ_PHOTOS || [];
     if (photos.length >= 4) {
-      const used = new Set();
-      return [qPhoto(used), qPhoto(used), qPhoto(used)];
+      const seen = loadSeen();
+      const byCat = {};
+      photos.forEach(p => (byCat[p.cat] = byCat[p.cat] || []).push(p));
+      const cats = shuffle(Object.keys(byCat));   // 행성/우주/별자리 골고루
+      const chosen = [];
+      for (const c of cats) { if (chosen.length >= 3) break; const it = pickItem(byCat[c], seen, chosen); if (it) chosen.push(it); }
+      while (chosen.length < 3) { const it = pickItem(photos, seen, chosen); if (!it) break; chosen.push(it); }
+      saveSeen(chosen.map(c => c.name));
+      return shuffle(chosen).map(qFor);
     }
     // 폴백(이미지 못 불러올 때): 기존 글자 퀴즈
     const ym = AstroData.ymOf(fromDate);
