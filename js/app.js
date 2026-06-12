@@ -841,11 +841,13 @@
       const { lat, lon } = await Geo.getPosition();
       $(".ef-lat", scope).value = lat.toFixed(6);
       $(".ef-lon", scope).value = lon.toFixed(6);
-      // 장소가 비어 있으면 지명 자동 채우기
+      // 관측 장소에 "지명 (위도, 경도)" 형태로 좌표까지 적어주기
       const placeEl = $(".ef-place", scope);
-      if (placeEl && !placeEl.value.trim()) {
-        const name = await Geo.reverseGeocode(lat, lon);
-        if (name) placeEl.value = name;
+      if (placeEl) {
+        let base = placeEl.value.trim().replace(/\s*\([^)]*\)\s*$/, "");  // 이전 좌표 괄호 제거
+        if (!base) base = await Geo.reverseGeocode(lat, lon) || "";
+        const coordStr = `(${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+        placeEl.value = base ? `${base} ${coordStr}` : coordStr;
       }
       // 하늘 상태 자동
       const sky = await Geo.currentSky(lat, lon);
