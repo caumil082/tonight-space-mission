@@ -21,6 +21,8 @@ const Journal = (() => {
     { value: "fail",    label: "🌧 시도(못 봄)", points: 10 }
   ];
   const SKY = ["맑음", "구름 조금", "구름 많음", "흐림", "비", "미세먼지"];
+  const SEEING = ["매우 좋음", "좋음", "보통", "나쁨", "매우 나쁨"];        // 시상(별이 얼마나 또렷한가)
+  const TRANSPARENCY = ["매우 좋음", "좋음", "보통", "나쁨", "매우 나쁨"];  // 투명도(하늘이 얼마나 맑은가)
 
   function resultInfo(value) {
     return RESULTS.find(r => r.value === value) || RESULTS[0];
@@ -52,15 +54,20 @@ const Journal = (() => {
     const arr = load();
     const full = {
       id: newId(),
-      at: AstroData.today(),                       // 기록한 날 (자동)
-      obsDate: entry.obsDate || AstroData.today(),  // 관측한 날 (과거 입력 가능)
+      at: AstroData.today(),                        // 기록한 날 (자동)
+      obsDate: entry.obsDate || AstroData.today(),   // 관측한 날(YYYY-MM-DD) — 정렬/하위호환용
+      obsStart: entry.obsStart || "",               // 관측 시작(YYYY-MM-DDTHH:MM)
+      obsEnd: entry.obsEnd || "",                   // 관측 종료
       eventDate: entry.eventDate || "",
       eventName: entry.eventName || "",
       result: entry.result || "success",
       sky: entry.sky || "",
+      seeing: entry.seeing || "",                   // 시상
+      transparency: entry.transparency || "",       // 투명도
+      coord: entry.coord || "",                     // 천구좌표
       place: entry.place || "",
       note: entry.note || "",
-      photo: entry.photo || "",                     // 사진 (작게 압축한 data URL)
+      photo: entry.photo || "",                     // 사진 (data URL 또는 클라우드 https)
       source: entry.source || "manual",
       missionId: entry.missionId || "",
       missionTitle: entry.missionTitle || ""
@@ -86,9 +93,9 @@ const Journal = (() => {
   }
 
   function all() {
-    // 관측 날짜가 최근인 순(같으면 최근 기록이 위로) — 과거 관측도 시간순으로 잘 섞임
+    // 관측 시작이 최근인 순(같으면 최근 기록이 위로)
     return load().slice().sort((a, b) => {
-      const da = a.obsDate || a.at || "", db = b.obsDate || b.at || "";
+      const da = a.obsStart || a.obsDate || a.at || "", db = b.obsStart || b.obsDate || b.at || "";
       return db.localeCompare(da) || (Number(b.id) - Number(a.id));
     });
   }
@@ -149,7 +156,7 @@ const Journal = (() => {
   }
 
   return {
-    RESULTS, SKY, resultInfo,
+    RESULTS, SKY, SEEING, TRANSPARENCY, resultInfo,
     add, update, remove, all, forMission,
     totalPoints, badge, LEVELS, level, streakGet
   };

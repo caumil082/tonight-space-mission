@@ -450,7 +450,7 @@ html, body {
   border-radius: 9px; padding: 9px 10px; font-size: .92rem; font-family: inherit;
 }
 .ef-row textarea { resize: vertical; }
-.ef-row input[type="date"] { color-scheme: dark; }
+.ef-row input[type="date"], .ef-row input[type="datetime-local"] { color-scheme: dark; }
 .ef-row input[type="file"] { font-size: .82rem; color: var(--muted); padding: 7px 8px; }
 .ef-photo-preview { margin-bottom: 10px; }
 .ef-photo-preview img {

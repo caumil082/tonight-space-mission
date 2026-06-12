@@ -94,11 +94,9 @@ const Quiz = (() => {
     if (events.length < 2) events = AstroData.sortedAll(); // 이번 달이 비면 전체에서
 
     const questions = [];
-    if (events.length >= 1) {
-      questions.push(qEvent(events));
-      questions.push(qDifficulty(events));
-    }
+    if (events.length >= 1) questions.push(qEvent(events));
     questions.push(qTerm(events.length ? events : AstroData.sortedAll()));
+    if (events.length >= 1) questions.push(qEvent(events));
 
     // 항상 3문제가 되도록 보충
     while (questions.length < 3) {

@@ -200,19 +200,18 @@
   // 현상 종류별 아이콘 (접힌 카드에서 한눈에)
   const KIND_ICON = { meteor: "☄️", moon: "🌕", eclipse: "🌑", planet: "🪐", star: "✨" };
 
-  // 접이식 카드: 평소엔 한 줄(아이콘·이름·난이도점·D-day·☆), 누르면 자세히
+  // 접이식 카드: 평소엔 한 줄(아이콘·이름·D-day·☆), 누르면 자세히
   function eventCard(ev) {
     const g = AstroData.explain(ev.event + " " + (ev.remarks || ""));
     const timeStr = ev.time ? ` · ${ev.time}` : "";
-    const d = AstroData.difficulty(ev);
     const icon = KIND_ICON[heroKind(ev)] || "✨";
+    const rec = recBadge(ev);
     return `
       <div class="card ev-card">
         <div class="card-head" data-action="card-toggle">
           <span class="ev-kind">${icon}</span>
           <span class="ev-name">${esc(ev.event)}</span>
           <span class="ev-head-right">
-            <span class="diff-dot diff-${d}" title="관측 난이도"></span>
             <span class="dday">${ddayText(ev.date)}</span>
             ${starBtn(ev)}
             <span class="ev-caret">▾</span>
@@ -220,7 +219,7 @@
         </div>
         <div class="card-detail">
           <div class="card-sub">${AstroData.pretty(ev.date)}${esc(timeStr)}</div>
-          <div class="card-row">${recBadge(ev)} ${diffBadge(ev)}</div>
+          ${rec ? `<div class="card-row">${rec}</div>` : ""}
           ${ev.remarks ? `<div class="remarks">${esc(ev.remarks)}</div>` : ""}
           ${g ? `<div class="explain">💡 <b>${esc(g.term)}</b> — ${esc(g.easy)}</div>` : ""}
         </div>
@@ -327,6 +326,24 @@
       const lab = asObj ? it.label : it;
       return `<option value="${esc(val)}" ${val === selected ? "selected" : ""}>${esc(lab)}</option>`;
     }).join("");
+  }
+
+  // 관측 품질 입력 (시상·투명도·천구좌표) — 일지/미션 폼 공용
+  function obsFields(v) {
+    v = v || {};
+    return `
+      <div class="ef-row">
+        <label>시상 (별이 또렷한 정도)</label>
+        <select class="ef-seeing"><option value="">선택 안 함</option>${options(Journal.SEEING, v.seeing || "")}</select>
+      </div>
+      <div class="ef-row">
+        <label>투명도 (하늘이 맑은 정도)</label>
+        <select class="ef-trans"><option value="">선택 안 함</option>${options(Journal.TRANSPARENCY, v.transparency || "")}</select>
+      </div>
+      <div class="ef-row">
+        <label>천구좌표 (선택)</label>
+        <input class="ef-coord" type="text" placeholder="예: 적경 5h 35m, 적위 -5°" value="${esc(v.coord || "")}">
+      </div>`;
   }
 
   /* =====================================================================
@@ -468,7 +485,6 @@
 
   function missionCard(m) {
     const entry = Journal.forMission(m.id);
-    const L = AstroData.DIFFICULTY_LABEL[m.difficulty];
     let body;
 
     if (entry && ui.openForm !== entry.id) {
@@ -505,7 +521,6 @@
       <div class="card mission ${entry ? "is-done" : ""}">
         <div class="card-top">
           <span class="ev-name">${m.icon} ${esc(m.title)}</span>
-          <span class="diff diff-${m.difficulty}">${L.emoji} ${L.text}</span>
         </div>
         <div class="card-sub">${AstroData.pretty(m.ev.date)} · ${esc(m.ev.event)}</div>
         <div class="mission-desc">${esc(m.desc)}</div>
@@ -528,6 +543,7 @@
             ${options(Journal.SKY, entry.sky)}
           </select>
         </div>
+        ${obsFields(entry)}
         <div class="ef-row">
           <label>관측 장소</label>
           <input class="ef-place" type="text" placeholder="집 앞, 학교 운동장 ..." value="${esc(entry.place)}">
@@ -595,8 +611,12 @@
       <div class="card entry-form manual" data-id="new">
         <div class="ef-title">새 관측 기록</div>
         <div class="ef-row">
-          <label>관측 날짜 (지난 날도 OK)</label>
-          <input class="ef-date" type="date" value="${AstroData.today()}" max="${AstroData.today()}">
+          <label>관측 시작 (연·월·일·시)</label>
+          <input class="ef-start" type="datetime-local" value="${AstroData.today()}T21:00">
+        </div>
+        <div class="ef-row">
+          <label>관측 종료</label>
+          <input class="ef-end" type="datetime-local" value="${AstroData.today()}T22:00">
         </div>
         <div class="ef-row">
           <label>천문현상</label>
@@ -610,6 +630,7 @@
           <label>하늘 상태</label>
           <select class="ef-sky"><option value="">선택 안 함</option>${options(Journal.SKY, "")}</select>
         </div>
+        ${obsFields({})}
         <div class="ef-row">
           <label>관측 장소</label>
           <input class="ef-place" type="text" placeholder="집 앞, 학교 운동장 ...">
@@ -629,12 +650,25 @@
       </div>`;
   }
 
+  // 관측 기간 표시 (관측 시작~종료)
+  function fmtDT(s) { if (!s) return ""; const [d, t] = s.split("T"); return AstroData.pretty(d) + (t ? ` ${t}` : ""); }
+  function fmtPeriod(e) {
+    if (!e.obsStart) return `관측일 ${AstroData.pretty(e.obsDate || e.at)}`;
+    const [sd, st] = e.obsStart.split("T"), [ed, et] = (e.obsEnd || "").split("T");
+    if (e.obsEnd && sd === ed) return `관측 ${AstroData.pretty(sd)} ${st || ""}~${et || ""}`;
+    if (e.obsEnd) return `관측 ${fmtDT(e.obsStart)} ~ ${fmtDT(e.obsEnd)}`;
+    return `관측 ${fmtDT(e.obsStart)}`;
+  }
+
   function journalCard(e) {
     const r = Journal.resultInfo(e.result);
     const tags = [
       e.source === "mission" ? `<span class="tag tag-mission">미션</span>` : "",
       e.sky ? `<span class="tag">🌤 ${esc(e.sky)}</span>` : "",
-      e.place ? `<span class="tag">📍 ${esc(e.place)}</span>` : ""
+      e.seeing ? `<span class="tag">🔭 시상 ${esc(e.seeing)}</span>` : "",
+      e.transparency ? `<span class="tag">🌌 투명도 ${esc(e.transparency)}</span>` : "",
+      e.place ? `<span class="tag">📍 ${esc(e.place)}</span>` : "",
+      e.coord ? `<span class="tag">📐 ${esc(e.coord)}</span>` : ""
     ].join("");
     return `
       <div class="card journal-card">
@@ -642,7 +676,7 @@
           <span class="ev-name">${esc(e.eventName || "관측 기록")}</span>
           <span class="result-badge result-${safeResult(e.result)}">${r.label}</span>
         </div>
-        <div class="card-sub">관측일 ${AstroData.pretty(e.obsDate || e.at)}</div>
+        <div class="card-sub">${esc(fmtPeriod(e))}</div>
         ${tags ? `<div class="tags">${tags}</div>` : ""}
         ${safePhotoSrc(e.photo) ? `<div class="journal-photo"><img src="${safePhotoSrc(e.photo)}" alt="관측 사진"></div>` : ""}
         ${e.note ? `<div class="entry-note">📝 ${esc(e.note)}</div>` : ""}
@@ -764,18 +798,24 @@
    * ===================================================================== */
   function efRead(scope) {
     return {
-      result: $(".ef-result", scope)?.value,
-      sky:    $(".ef-sky", scope)?.value || "",
-      place:  $(".ef-place", scope)?.value.trim() || "",
-      note:   $(".ef-note", scope)?.value.trim() || "",
-      event:  $(".ef-event", scope)?.value.trim() || ""
+      result:       $(".ef-result", scope)?.value,
+      sky:          $(".ef-sky", scope)?.value || "",
+      seeing:       $(".ef-seeing", scope)?.value || "",
+      transparency: $(".ef-trans", scope)?.value || "",
+      coord:        $(".ef-coord", scope)?.value.trim() || "",
+      place:        $(".ef-place", scope)?.value.trim() || "",
+      note:         $(".ef-note", scope)?.value.trim() || "",
+      event:        $(".ef-event", scope)?.value.trim() || "",
+      start:        $(".ef-start", scope)?.value || "",
+      end:          $(".ef-end", scope)?.value || ""
     };
   }
 
   // 미션에 연결된 일지 항목 저장(수정) — 사진 포함
   async function saveMissionEntry(scope, id) {
     const v = efRead(scope);
-    const patch = { result: v.result, sky: v.sky, place: v.place, note: v.note };
+    const patch = { result: v.result, sky: v.sky, seeing: v.seeing, transparency: v.transparency,
+                    coord: v.coord, place: v.place, note: v.note };
     const photo = await photoForSave(scope);
     if (photo) patch.photo = photo;            // 새 사진 골랐을 때만 교체(클라우드/기기)
     if (Journal.update(id, patch) === null) {
@@ -785,14 +825,18 @@
     ui.openForm = null; renderHeader(); rerender();
   }
 
-  // 직접 기록 저장 — 과거 날짜 + 사진 포함
+  // 직접 기록 저장 — 관측 기간 + 품질(시상·투명도·천구좌표) + 사진
   async function saveManualEntry(scope) {
     const v = efRead(scope);
-    const obsDate = $(".ef-date", scope)?.value || AstroData.today();
+    const obsStart = v.start || `${AstroData.today()}T00:00`;
+    const obsEnd = v.end || obsStart;
+    const obsDate = obsStart.split("T")[0] || AstroData.today();
     const photo = await photoForSave(scope);
     const ok = Journal.add({
       source: "manual", eventName: v.event || "관측 기록", eventDate: "",
-      obsDate, result: v.result, sky: v.sky, place: v.place, note: v.note, photo: photo || ""
+      obsDate, obsStart, obsEnd,
+      seeing: v.seeing, transparency: v.transparency, coord: v.coord,
+      result: v.result, sky: v.sky, place: v.place, note: v.note, photo: photo || ""
     });
     if (ok === null) {
       alert("저장 공간이 부족해요. 사진을 빼거나 더 작은 사진을 써보세요.");
