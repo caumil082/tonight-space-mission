@@ -758,6 +758,7 @@
       </div>
       <div class="card quiz-card">
         <div class="q-text">${esc(q.q)}</div>
+        ${q.image ? `<img class="quiz-img" src="${q.image}" alt="퀴즈 사진" referrerpolicy="no-referrer" onerror="this.style.display='none'">` : ""}
         <div class="choices">${choicesHtml}</div>
         <div class="q-feedback" id="q-feedback"></div>
         <button class="btn-big hidden" id="q-next" data-action="quiz-next"></button>

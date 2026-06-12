@@ -35,6 +35,25 @@ const Quiz = (() => {
 
   /* ---------- 문제 만들기 ---------- */
 
+  // ⭐ 사진 맞추기: 실제 사진/그림을 보고 이름 고르기
+  function qPhoto(used) {
+    const all = window.QUIZ_PHOTOS || [];
+    const pool = all.filter(p => !used.has(p.name));
+    const item = sample(pool.length ? pool : all, 1)[0];
+    used.add(item.name);
+    // 같은 종류(행성/우주/별자리)에서 가짜 보기 우선
+    let distract = sample(all.filter(p => p.cat === item.cat && p.name !== item.name), 3).map(p => p.name);
+    if (distract.length < 3) {
+      const more = all.filter(p => p.name !== item.name && !distract.includes(p.name)).map(p => p.name);
+      distract = distract.concat(sample(more, 3 - distract.length));
+    }
+    const { choices, answerIndex } = makeChoices(item.name, distract);
+    const q = item.cat === "행성" ? "이 사진 속 천체는 무엇일까요?"
+            : item.cat === "별자리" ? "이 별자리는 무엇일까요?"
+            : "이 우주 사진은 무엇일까요?";
+    return { kind: "photo", q, image: item.url, choices, answerIndex, explain: `정답은 "${item.name}" 입니다.` };
+  }
+
   // ① 현상 맞히기: 진짜 현상 1개 vs 가짜 현상들
   function qEvent(events) {
     const ev = sample(events, 1)[0];
@@ -86,22 +105,22 @@ const Quiz = (() => {
   }
 
   /* ---------- 3문제 세트 만들기 ----------
-   * 이번 달 현상을 재료로 씁니다. 현상이 너무 적으면 용어 문제로 채웁니다.
+   * 기본: 사진 맞추기(행성·우주·별자리). 이미지 목록이 없으면 글자 퀴즈로 폴백.
    */
   function build(fromDate) {
+    const photos = window.QUIZ_PHOTOS || [];
+    if (photos.length >= 4) {
+      const used = new Set();
+      return [qPhoto(used), qPhoto(used), qPhoto(used)];
+    }
+    // 폴백(이미지 못 불러올 때): 기존 글자 퀴즈
     const ym = AstroData.ymOf(fromDate);
     let events = AstroData.inMonth(ym);
-    if (events.length < 2) events = AstroData.sortedAll(); // 이번 달이 비면 전체에서
-
+    if (events.length < 2) events = AstroData.sortedAll();
     const questions = [];
     if (events.length >= 1) questions.push(qEvent(events));
     questions.push(qTerm(events.length ? events : AstroData.sortedAll()));
-    if (events.length >= 1) questions.push(qEvent(events));
-
-    // 항상 3문제가 되도록 보충
-    while (questions.length < 3) {
-      questions.push(qTerm(AstroData.sortedAll()));
-    }
+    while (questions.length < 3) questions.push(qTerm(AstroData.sortedAll()));
     return questions.slice(0, 3);
   }
 
