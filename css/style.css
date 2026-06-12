@@ -524,6 +524,14 @@ html, body {
   border-radius: 12px; border: 1px solid #ffffff1a;
 }
 .wiki-extract { font-size: .95rem; line-height: 1.7; color: var(--text); }
+.wiki-info { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: .85rem; }
+.wiki-info tr { border-bottom: 1px solid #ffffff12; }
+.wiki-info .wi-head {
+  background: #6ba8ff1f; color: var(--accent2); font-weight: 800; text-align: center;
+  padding: 6px; border-radius: 6px;
+}
+.wiki-info .wi-k { color: var(--accent2); font-weight: 700; padding: 6px 8px; width: 38%; vertical-align: top; white-space: nowrap; }
+.wiki-info .wi-v { padding: 6px 8px; line-height: 1.5; word-break: break-word; }
 .wiki-more { display: inline-block; width: auto; margin-top: 14px; text-decoration: none; }
 
 /* ---------- PDF(인쇄) 보고서 ---------- */

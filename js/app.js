@@ -1081,6 +1081,12 @@
         ${r.description ? `<div class="card-sub">${esc(r.description)}</div>` : ""}
         ${img ? `<div class="wiki-photo"><img src="${img}" alt="${esc(r.title)}" referrerpolicy="no-referrer" onerror="this.style.display='none'"></div>` : ""}
         <div class="wiki-extract">${esc(r.extract)}</div>
+        ${Array.isArray(r.info) && r.info.length ? `
+          <table class="wiki-info">
+            ${r.info.map(x => x.type === "header"
+              ? `<tr><th class="wi-head" colspan="2">${esc(x.label)}</th></tr>`
+              : `<tr><td class="wi-k">${esc(x.label)}</td><td class="wi-v">${esc(x.value)}</td></tr>`).join("")}
+          </table>` : ""}
         ${/^https:\/\/[^\s"'<>]+$/.test(r.url) ? `<a class="btn-big sm wiki-more" href="${r.url}" target="_blank" rel="noopener">위키백과에서 더 보기 ↗</a>` : ""}
       </div>`;
   }
