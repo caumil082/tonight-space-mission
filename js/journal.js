@@ -66,6 +66,8 @@ const Journal = (() => {
       transparency: entry.transparency || "",       // 투명도
       coord: entry.coord || "",                     // 천구좌표
       place: entry.place || "",
+      lat: entry.lat || "",                         // 관측 위치 좌표(지도 링크용)
+      lon: entry.lon || "",
       note: entry.note || "",
       photo: entry.photo || "",                     // 사진 (data URL 또는 클라우드 https)
       source: entry.source || "manual",

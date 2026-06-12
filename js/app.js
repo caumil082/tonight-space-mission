@@ -346,6 +346,21 @@
       </div>`;
   }
 
+  // 현재 위치·날씨 버튼 + 좌표 보관 (일지/미션 폼 공용)
+  function locateRow(v) {
+    v = v || {};
+    return `
+      <div class="ef-row">
+        <label>위치·날씨 자동</label>
+        <div class="locate-wrap">
+          <button type="button" class="btn-clear ef-locate" data-action="locate">📍 현재 위치·날씨 가져오기</button>
+          <span class="ef-locate-status"></span>
+        </div>
+        <input class="ef-lat" type="hidden" value="${esc(v.lat || "")}">
+        <input class="ef-lon" type="hidden" value="${esc(v.lon || "")}">
+      </div>`;
+  }
+
   /* =====================================================================
    *  탭 1: 오늘
    * ===================================================================== */
@@ -536,6 +551,7 @@
           <label>관측 결과</label>
           <select class="ef-result">${options(Journal.RESULTS, entry.result, true)}</select>
         </div>
+        ${locateRow(entry)}
         <div class="ef-row">
           <label>하늘 상태</label>
           <select class="ef-sky">
@@ -626,6 +642,7 @@
           <label>관측 결과</label>
           <select class="ef-result">${options(Journal.RESULTS, "success", true)}</select>
         </div>
+        ${locateRow({})}
         <div class="ef-row">
           <label>하늘 상태</label>
           <select class="ef-sky"><option value="">선택 안 함</option>${options(Journal.SKY, "")}</select>
@@ -668,6 +685,7 @@
       e.seeing ? `<span class="tag">🔭 시상 ${esc(e.seeing)}</span>` : "",
       e.transparency ? `<span class="tag">🌌 투명도 ${esc(e.transparency)}</span>` : "",
       e.place ? `<span class="tag">📍 ${esc(e.place)}</span>` : "",
+      (e.lat && e.lon) ? `<a class="tag tag-link" href="https://www.google.com/maps?q=${encodeURIComponent(e.lat + "," + e.lon)}" target="_blank" rel="noopener">🗺 지도</a>` : "",
       e.coord ? `<span class="tag">📐 ${esc(e.coord)}</span>` : ""
     ].join("");
     return `
@@ -807,15 +825,43 @@
       note:         $(".ef-note", scope)?.value.trim() || "",
       event:        $(".ef-event", scope)?.value.trim() || "",
       start:        $(".ef-start", scope)?.value || "",
-      end:          $(".ef-end", scope)?.value || ""
+      end:          $(".ef-end", scope)?.value || "",
+      lat:          $(".ef-lat", scope)?.value || "",
+      lon:          $(".ef-lon", scope)?.value || ""
     };
+  }
+
+  // 📍 현재 위치 → 좌표 저장 + 지명·하늘 상태 자동 입력
+  async function locate(scope) {
+    if (!scope) return;
+    const status = $(".ef-locate-status", scope);
+    const setStatus = (msg) => { if (status) status.textContent = msg; };
+    setStatus(" 위치 찾는 중…");
+    try {
+      const { lat, lon } = await Geo.getPosition();
+      $(".ef-lat", scope).value = lat.toFixed(6);
+      $(".ef-lon", scope).value = lon.toFixed(6);
+      // 장소가 비어 있으면 지명 자동 채우기
+      const placeEl = $(".ef-place", scope);
+      if (placeEl && !placeEl.value.trim()) {
+        const name = await Geo.reverseGeocode(lat, lon);
+        if (name) placeEl.value = name;
+      }
+      // 하늘 상태 자동
+      const sky = await Geo.currentSky(lat, lon);
+      const skyEl = $(".ef-sky", scope);
+      if (sky && skyEl) skyEl.value = sky;
+      setStatus(` ✅ ${[sky, placeEl?.value].filter(Boolean).join(" · ") || "위치 저장됨"}`);
+    } catch (e) {
+      setStatus(" ⚠️ " + e.message);
+    }
   }
 
   // 미션에 연결된 일지 항목 저장(수정) — 사진 포함
   async function saveMissionEntry(scope, id) {
     const v = efRead(scope);
     const patch = { result: v.result, sky: v.sky, seeing: v.seeing, transparency: v.transparency,
-                    coord: v.coord, place: v.place, note: v.note };
+                    coord: v.coord, place: v.place, note: v.note, lat: v.lat, lon: v.lon };
     const photo = await photoForSave(scope);
     if (photo) patch.photo = photo;            // 새 사진 골랐을 때만 교체(클라우드/기기)
     if (Journal.update(id, patch) === null) {
@@ -836,7 +882,8 @@
       source: "manual", eventName: v.event || "관측 기록", eventDate: "",
       obsDate, obsStart, obsEnd,
       seeing: v.seeing, transparency: v.transparency, coord: v.coord,
-      result: v.result, sky: v.sky, place: v.place, note: v.note, photo: photo || ""
+      result: v.result, sky: v.sky, place: v.place, note: v.note,
+      lat: v.lat, lon: v.lon, photo: photo || ""
     });
     if (ok === null) {
       alert("저장 공간이 부족해요. 사진을 빼거나 더 작은 사진을 써보세요.");
@@ -917,6 +964,7 @@
         renderCalendar();
         break;
       }
+      case "locate": locate(t.closest(".entry-form")); break;
       case "card-toggle": { const c = t.closest(".ev-card"); if (c) c.classList.toggle("open"); break; }
       case "backup-export": Backup.download(); break;
       case "export-pdf": exportPdf(); break;
