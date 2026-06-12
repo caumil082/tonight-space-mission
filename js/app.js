@@ -854,7 +854,10 @@
       const sky = await Geo.currentSky(lat, lon);
       const skyEl = $(".ef-sky", scope);
       if (sky && skyEl) skyEl.value = sky;
-      setStatus(` ✅ ${[sky, placeEl?.value].filter(Boolean).join(" · ") || "위치 저장됨"}`);
+      // 결과 + 구글지도 확인 링크 (저장 전에 위치 확인용)
+      const label = [sky, placeEl && placeEl.value].filter(Boolean).join(" · ") || "위치 저장됨";
+      const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(lat.toFixed(6) + "," + lon.toFixed(6))}`;
+      if (status) status.innerHTML = ` ✅ ${esc(label)} · <a class="map-check" href="${mapUrl}" target="_blank" rel="noopener">🗺 지도에서 확인</a>`;
     } catch (e) {
       setStatus(" ⚠️ " + e.message);
     }
